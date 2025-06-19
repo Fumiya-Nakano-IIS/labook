@@ -1,4 +1,4 @@
-# Labook Database
+# laBook
 
 This schema manages lab library books, their owners, and current lending status.
 
@@ -61,13 +61,13 @@ Below are the RESTful API endpoints for managing books, shelves, users, and loan
 
 ### 📚 Books
 
-| Method | Endpoint           | Description                  |
-|--------|--------------------|------------------------------|
-| GET    | `/books`           | List all books               |
-| GET    | `/books/<isbn>`    | Get details for a book       |
-| POST   | `/books`           | Add a new book               |
-| PUT    | `/books/<isbn>`    | Update book info             |
-| DELETE | `/books/<isbn>`    | Delete a book                |
+| Method | Endpoint        | Description            |
+| ------ | --------------- | ---------------------- |
+| GET    | `/books`        | List all books         |
+| GET    | `/books/<isbn>` | Get details for a book |
+| POST   | `/books`        | Add a new book         |
+| PUT    | `/books/<isbn>` | Update book info       |
+| DELETE | `/books/<isbn>` | Delete a book          |
 
 **Book JSON Example:**
 ```json
@@ -88,37 +88,37 @@ Below are the RESTful API endpoints for managing books, shelves, users, and loan
 
 ### 🗄️ Shelves
 
-| Method | Endpoint             | Description                  |
-|--------|----------------------|------------------------------|
-| GET    | `/shelves`           | List all shelves             |
-| GET    | `/shelves/<code>`    | Get shelf details            |
-| POST   | `/shelves`           | Add a new shelf              |
-| PUT    | `/shelves/<code>`    | Update shelf info            |
-| DELETE | `/shelves/<code>`    | Delete a shelf               |
+| Method | Endpoint          | Description       |
+| ------ | ----------------- | ----------------- |
+| GET    | `/shelves`        | List all shelves  |
+| GET    | `/shelves/<code>` | Get shelf details |
+| POST   | `/shelves`        | Add a new shelf   |
+| PUT    | `/shelves/<code>` | Update shelf info |
+| DELETE | `/shelves/<code>` | Delete a shelf    |
 
 ---
 
 ### 👤 Users
 
-| Method | Endpoint           | Description                  |
-|--------|--------------------|------------------------------|
-| GET    | `/users`           | List all users               |
-| GET    | `/users/<id>`      | Get user details             |
-| POST   | `/users`           | Add a new user               |
-| PUT    | `/users/<id>`      | Update user info             |
-| DELETE | `/users/<id>`      | Delete a user                |
+| Method | Endpoint      | Description      |
+| ------ | ------------- | ---------------- |
+| GET    | `/users`      | List all users   |
+| GET    | `/users/<id>` | Get user details |
+| POST   | `/users`      | Add a new user   |
+| PUT    | `/users/<id>` | Update user info |
+| DELETE | `/users/<id>` | Delete a user    |
 
 ---
 
 ### 🔄 Loans
 
-| Method | Endpoint           | Description                       |
-|--------|--------------------|-----------------------------------|
-| GET    | `/loans`           | List all loans                    |
-| GET    | `/loans/<id>`      | Get loan details                  |
-| POST   | `/loans`           | Create a new loan (checkout book) |
-| PUT    | `/loans/<id>`      | Update loan (e.g., return book)   |
-| DELETE | `/loans/<id>`      | Delete a loan record              |
+| Method | Endpoint      | Description                       |
+| ------ | ------------- | --------------------------------- |
+| GET    | `/loans`      | List all loans                    |
+| GET    | `/loans/<id>` | Get loan details                  |
+| POST   | `/loans`      | Create a new loan (checkout book) |
+| PUT    | `/loans/<id>` | Update loan (e.g., return book)   |
+| DELETE | `/loans/<id>` | Delete a loan record              |
 
 **Loan JSON Example:**
 ```json
