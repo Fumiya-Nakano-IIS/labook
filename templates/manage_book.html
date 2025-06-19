@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>{% if mode == "edit" %}Edit{% else %}Add{% endif %} Book</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='book_form.js') }}"></script>
+</head>
+
+<body>
+    <h1>{% if mode == "edit" %}Edit{% else %}Add{% endif %} Book</h1>
+    {% if error %}
+    <div style="color:red;">Error: {{ error }}</div>
+    {% endif %}
+    <form method="post" id="manageBookForm">
+        <table class="book-form-table">
+            <tr>
+                <td><label for="isbn">ISBN:</label></td>
+                <td>
+                    <input type="text" name="isbn" id="isbn" value="{{ book['isbn'] if book else '' }}" {% if
+                        mode=="edit" %}readonly{% endif %} required>
+                </td>
+            </tr>
+            <tr>
+                <td><label for="fetchBookInfoBtn"></label></td>
+                <td>
+                    <button type="button" id="fetchBookInfoBtn" onclick="fetchBookInfo()">fetch online info</button>
+                </td>
+            </tr>
+            <tr>
+                <td><label for="title">Title:</label></td>
+                <td><input type="text" name="title" id="title" value="{{ book['title'] if book else '' }}" required>
+                </td>
+            </tr>
+            <tr>
+                <td><label for="author">Author:</label></td>
+                <td><input type="text" name="author" id="author" value="{{ book['author'] if book else '' }}"></td>
+            </tr>
+            <tr>
+                <td><label for="publisher">Publisher:</label></td>
+                <td><input type="text" name="publisher" id="publisher" value="{{ book['publisher'] if book else '' }}">
+                </td>
+            </tr>
+            <tr>
+                <td><label for="publication_date">Publication Date:</label></td>
+                <td><input type="date" name="publication_date" id="publication_date"
+                        value="{{ book['publication_date'] if book else '' }}"></td>
+            </tr>
+            <tr>
+                <td><label for="cover_image_path">Cover Image Path:</label></td>
+                <td><input type="text" name="cover_image_path" id="cover_image_path"
+                        value="{{ book['cover_image_path'] if book else '' }}"></td>
+            </tr>
+            <tr>
+                <td><label for="owner_id">Owner ID:</label></td>
+                <td><input type="number" name="owner_id" id="owner_id" value="{{ book['owner_id'] if book else '' }}">
+                </td>
+            </tr>
+            <tr>
+                <td><label for="comment">Comment:</label></td>
+                <td><input type="text" name="comment" id="comment" value="{{ book['comment'] if book else '' }}"></td>
+            </tr>
+            <tr>
+                <td><label for="shelf_code">Shelf Code:</label></td>
+                <td><input type="text" name="shelf_code" id="shelf_code"
+                        value="{{ book['shelf_code'] if book else '' }}"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td><input type="submit" value="{% if mode == 'edit' %}Update{% else %}Add{% endif %} Book"></td>
+            </tr>
+            <tr>
+                <td><label>Cover Preview:</label></td>
+                <td>
+                    <img id="cover_preview"
+                        src="/{{ book['cover_image_path'] if book and book['cover_image_path'] else '' }}"
+                        alt="No Image">
+                </td>
+            </tr>
+        </table>
+    </form>
+</body>
+
+</html>

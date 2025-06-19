@@ -1,5 +1,6 @@
-from flask import Blueprint, request, jsonify, abort
+from flask import Blueprint, request, jsonify, abort, render_template, redirect, url_for
 from db import get_db
+import fetch_book_info
 
 bp = Blueprint('books', __name__, url_prefix='/books')
 
@@ -40,6 +41,7 @@ def add_book():
         abort(400, description="Missing required fields")
     db = get_db()
     try:
+        print("trying to insert book with ISBN:", data['isbn'])
         db.execute(
             "INSERT INTO Books (isbn, title, author, publisher, publication_date, cover_image_path, owner_id, comment, shelf_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
@@ -50,7 +52,7 @@ def add_book():
         )
         db.commit()
     except Exception:
-        abort(409, description="Book with this ISBN already exists")
+        abort(409, description=Exception)
     return jsonify({"message": "Book added"}), 201
 
 @bp.route('/<isbn>', methods=['PUT'])
@@ -81,3 +83,75 @@ def delete_book(isbn):
     db.execute("DELETE FROM Books WHERE isbn = ?", (isbn,))
     db.commit()
     return jsonify({"message": "Book deleted"})
+
+@bp.route('/api/fetch_book_info/<isbn>')
+def api_fetch_book_info(isbn):
+    info = fetch_book_info.fetch_book_info(isbn)
+    if info:
+        return jsonify(info)
+    else:
+        return jsonify({"error": "No book info found"}), 404
+
+@bp.route('/manage', methods=['GET', 'POST'])
+def manage_book_page():
+    db = get_db()
+    error = None
+    book = None
+    mode = "add"
+    isbn = request.args.get('isbn') or (request.form.get('isbn') if request.method == 'POST' else None)
+    keep_owner_id = ""
+    keep_shelf_code = ""
+
+    if isbn:
+        cursor = db.execute("SELECT * FROM Books WHERE isbn = ?", (isbn,))
+        row = cursor.fetchone()
+        if row:
+            mode = "edit"
+            columns = [col[0] for col in cursor.description]
+            book = dict(zip(columns, row))
+        else:
+            import fetch_book_info
+            info = fetch_book_info.fetch_book_info(isbn)
+            if info:
+                book = info
+            else:
+                book = {"isbn": isbn}
+
+    if request.method == 'POST':
+        data = request.form
+        keep_owner_id = data.get('owner_id', '')
+        keep_shelf_code = data.get('shelf_code', '')
+        if mode == "edit":
+            db.execute(
+                """UPDATE Books SET title=?, author=?, publisher=?, publication_date=?, cover_image_path=?, owner_id=?, comment=?, shelf_code=?
+                   WHERE isbn=?""",
+                (
+                    data.get('title'), data.get('author'), data.get('publisher'),
+                    data.get('publication_date'), data.get('cover_image_path'), data.get('owner_id'),
+                    data.get('comment'), data.get('shelf_code'), data['isbn']
+                )
+            )
+            db.commit()
+            return redirect(url_for('books.list_books'))
+        else:
+            try:
+                db.execute(
+                    "INSERT INTO Books (isbn, title, author, publisher, publication_date, cover_image_path, owner_id, comment, shelf_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (
+                        data['isbn'], data['title'], data.get('author'), data.get('publisher'),
+                        data.get('publication_date'), data.get('cover_image_path'), data.get('owner_id'),
+                        data.get('comment'), data.get('shelf_code')
+                    )
+                )
+                db.commit()
+                book = {"owner_id": keep_owner_id, "shelf_code": keep_shelf_code}
+                mode = "add"
+                return render_template('manage_book.html', book=book, error=None, mode=mode)
+            except Exception as e:
+                error = str(e)
+    if mode == "add" and (keep_owner_id or keep_shelf_code):
+        if not book:
+            book = {}
+        book['owner_id'] = keep_owner_id
+        book['shelf_code'] = keep_shelf_code
+    return render_template('manage_book.html', book=book, error=error, mode=mode)

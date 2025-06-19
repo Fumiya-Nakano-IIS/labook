@@ -1,80 +1,76 @@
 # laBook
 
-This schema manages lab library books, their owners, and current lending status.
+このプロジェクトは、研究室の蔵書管理・貸出管理を行うWebアプリです。
 
 ---
 
-## 📚 Tables
+## 📚 テーブル構成
 
 ### `Books`
 
-| Column             | Type    | Constraints                        | Description                   |
-| ------------------ | ------- | ---------------------------------- | ----------------------------- |
-| `isbn`             | TEXT    | PRIMARY KEY                        | ISBN of the book (unique key) |
-| `title`            | TEXT    | NOT NULL                           | Title of the book             |
-| `author`           | TEXT    |                                    | Author(s)                     |
-| `publisher`        | TEXT    |                                    | Publisher                     |
-| `publication_date` | TEXT    |                                    | Publication date              |
-| `cover_image_path` | TEXT    |                                    | Path to cover image           |
-| `owner_id`         | INTEGER | FOREIGN KEY → `Users.user_id`      | Owner of the book             |
-| `comment`          | TEXT    |                                    | Free-text memo for notes      |
-| `shelf_code`       | TEXT    | FOREIGN KEY → `Shelves.shelf_code` | Home shelf (default location) |
+| カラム名             | 型      | 制約                              | 説明                         |
+| -------------------- | ------- | --------------------------------- | ---------------------------- |
+| `isbn`               | TEXT    | PRIMARY KEY                       | 書籍のISBN（ユニーク）       |
+| `title`              | TEXT    | NOT NULL                          | 書名                         |
+| `author`             | TEXT    |                                   | 著者                         |
+| `publisher`          | TEXT    |                                   | 出版社                       |
+| `publication_date`   | TEXT    |                                   | 出版日                       |
+| `cover_image_path`   | TEXT    |                                   | 表紙画像パス                 |
+| `owner_id`           | INTEGER | FOREIGN KEY → `Users.user_id`     | 所有者                       |
+| `comment`            | TEXT    |                                   | メモ                         |
+| `shelf_code`         | TEXT    | FOREIGN KEY → `Shelves.shelf_code`| 所蔵棚                       |
 
 ---
 
 ### `Shelves`
 
-| Column                 | Type | Constraints | Description                |
-| ---------------------- | ---- | ----------- | -------------------------- |
-| `shelf_code`           | TEXT | PRIMARY KEY | Unique shelf ID (e.g., A1) |
-| `shelf_name`           | TEXT | NOT NULL    | Display name of the shelf  |
-| `location_description` | TEXT |             | Additional description     |
+| カラム名                 | 型   | 制約        | 説明                 |
+| ------------------------ | ---- | ----------- | -------------------- |
+| `shelf_code`             | TEXT | PRIMARY KEY | 棚ID（例: A1）       |
+| `shelf_name`             | TEXT | NOT NULL    | 棚の表示名           |
+| `location_description`   | TEXT |             | 棚の説明             |
 
 ---
 
 ### `Users`
 
-| Column        | Type    | Constraints               | Description        |
-| ------------- | ------- | ------------------------- | ------------------ |
-| `user_id`     | INTEGER | PRIMARY KEY AUTOINCREMENT | Unique internal ID |
-| `name`        | TEXT    | NOT NULL                  | User's name        |
-| `email`       | TEXT    |                           | Email address      |
+| カラム名     | 型      | 制約                   | 説明         |
+| ------------ | ------- | ---------------------- | ------------ |
+| `user_id`    | INTEGER | PRIMARY KEY AUTOINCREMENT | ユーザーID |
+| `name`       | TEXT    | NOT NULL              | 氏名         |
+| `email`      | TEXT    |                       | メールアドレス|
 
 ---
 
 ### `Loans`
 
-| Column        | Type    | Constraints               | Description           |
-| ------------- | ------- | ------------------------- | --------------------- |
-| `loan_id`     | INTEGER | PRIMARY KEY AUTOINCREMENT | Unique loan ID        |
-| `isbn`        | TEXT    | FOREIGN KEY → Books.isbn  | Loaned book           |
-| `user_id`     | INTEGER | FOREIGN KEY → Users.user_id | Borrower             |
-| `loan_date`   | TEXT    | NOT NULL                  | Date loaned out       |
-| `due_date`    | TEXT    |                           | Due date (optional)   |
-| `return_date` | TEXT    |                           | Date returned (NULL if not returned) |
-
----
-
-- Cover images are managed via path (e.g. /covers/9781234567890.jpg).
+| カラム名      | 型      | 制約                           | 説明                |
+| ------------- | ------- | ------------------------------ | ------------------- |
+| `loan_id`     | INTEGER | PRIMARY KEY AUTOINCREMENT      | 貸出ID              |
+| `isbn`        | TEXT    | FOREIGN KEY → Books.isbn       | 貸出書籍            |
+| `user_id`     | INTEGER | FOREIGN KEY → Users.user_id    | 借主                |
+| `loan_date`   | TEXT    | NOT NULL                       | 貸出日              |
+| `due_date`    | TEXT    |                                | 返却期限            |
+| `return_date` | TEXT    |                                | 返却日（未返却はNULL）|
 
 ---
 
 ## 📡 REST API
 
-The backend is implemented in Flask with endpoints grouped by resource.  
-All endpoints return and accept JSON.
+Flaskで実装。全てJSONでやりとりします。
 
 ### Books
 
-| Method | Endpoint           | Description                  |
-|--------|--------------------|------------------------------|
-| GET    | `/books`           | List all books (with status) |
-| GET    | `/books/<isbn>`    | Get details for a book (with status) |
-| POST   | `/books`           | Add a new book               |
-| PUT    | `/books/<isbn>`    | Update book info             |
-| DELETE | `/books/<isbn>`    | Delete a book                |
+| Method | Endpoint           | 説明                                 |
+|--------|--------------------|--------------------------------------|
+| GET    | `/books`           | 全書籍一覧（ステータス付き）         |
+| GET    | `/books/<isbn>`    | 書籍詳細（ステータス付き）           |
+| POST   | `/books`           | 書籍追加                             |
+| PUT    | `/books/<isbn>`    | 書籍情報更新                         |
+| DELETE | `/books/<isbn>`    | 書籍削除                             |
+| GET    | `/books/api/fetch_book_info/<isbn>` | ISBNから書誌情報取得（外部API連携） |
 
-**Book JSON Example:**
+**Book JSON例:**
 ```json
 {
   "isbn": "9781234567890",
@@ -86,50 +82,49 @@ All endpoints return and accept JSON.
   "owner_id": 1,
   "comment": "Some notes",
   "shelf_code": "A1",
-  "status": "On Shelf" // or "On Loan"
+  "status": "On Shelf" // または "On Loan"
 }
 ```
 
-**Book Status:**  
-- The `status` field is `"On Loan"` if there is a loan record for the book with `return_date` as NULL, otherwise `"On Shelf"`.
+- `status`は貸出中なら"On Loan"、そうでなければ"On Shelf"。
 
 ---
 
 ### Shelves
 
-| Method | Endpoint             | Description                  |
-|--------|----------------------|------------------------------|
-| GET    | `/shelves`           | List all shelves             |
-| GET    | `/shelves/<code>`    | Get shelf details            |
-| POST   | `/shelves`           | Add a new shelf              |
-| PUT    | `/shelves/<code>`    | Update shelf info            |
-| DELETE | `/shelves/<code>`    | Delete a shelf               |
+| Method | Endpoint             | 説明           |
+|--------|----------------------|----------------|
+| GET    | `/shelves`           | 棚一覧         |
+| GET    | `/shelves/<code>`    | 棚詳細         |
+| POST   | `/shelves`           | 棚追加         |
+| PUT    | `/shelves/<code>`    | 棚情報更新     |
+| DELETE | `/shelves/<code>`    | 棚削除         |
 
 ---
 
 ### Users
 
-| Method | Endpoint           | Description                  |
-|--------|--------------------|------------------------------|
-| GET    | `/users`           | List all users               |
-| GET    | `/users/<id>`      | Get user details             |
-| POST   | `/users`           | Add a new user               |
-| PUT    | `/users/<id>`      | Update user info             |
-| DELETE | `/users/<id>`      | Delete a user                |
+| Method | Endpoint           | 説明           |
+|--------|--------------------|----------------|
+| GET    | `/users`           | ユーザー一覧   |
+| GET    | `/users/<id>`      | ユーザー詳細   |
+| POST   | `/users`           | ユーザー追加   |
+| PUT    | `/users/<id>`      | ユーザー情報更新|
+| DELETE | `/users/<id>`      | ユーザー削除   |
 
 ---
 
 ### Loans
 
-| Method | Endpoint           | Description                       |
-|--------|--------------------|-----------------------------------|
-| GET    | `/loans`           | List all loans                    |
-| GET    | `/loans/<id>`      | Get loan details                  |
-| POST   | `/loans`           | Create a new loan (checkout book) |
-| PUT    | `/loans/<id>`      | Update loan (e.g., return book)   |
-| DELETE | `/loans/<id>`      | Delete a loan record              |
+| Method | Endpoint           | 説明                       |
+|--------|--------------------|----------------------------|
+| GET    | `/loans`           | 貸出一覧                   |
+| GET    | `/loans/<id>`      | 貸出詳細                   |
+| POST   | `/loans`           | 新規貸出                   |
+| PUT    | `/loans/<id>`      | 貸出情報更新（返却など）   |
+| DELETE | `/loans/<id>`      | 貸出記録削除               |
 
-**Loan JSON Example:**
+**Loan JSON例:**
 ```json
 {
   "isbn": "9781234567890",
@@ -142,40 +137,45 @@ All endpoints return and accept JSON.
 
 ---
 
-## 📦 Project Structure
+## 📖 書籍追加・編集ページ
+
+- `/books/manage` でISBNを入力すると、  
+  - DBに存在すれば編集フォーム
+  - 存在しなければ外部APIから自動取得して追加フォーム
+- 1ページで追加・編集どちらも対応
+- ISBN入力時に自動判定・自動取得
+
+---
+
+## 📦 ディレクトリ構成例
 
 ```
 labook/
 ├── app.py
 ├── db.py
+├── fetch_book_info.py
 ├── routes/
 │   ├── __init__.py
 │   ├── books.py
 │   ├── shelves.py
 │   ├── users.py
 │   └── loans.py
+├── static/
+│   └── book_form.js
+├── templates/
+│   └── manage_book.html
 ├── library.db
 ├── README.md
 ```
 
 ---
 
-## 🛠️ How Book Status is Determined
+## 🏁 クイックスタート
 
-For each book, status is determined by:
-
-```sql
-SELECT 1 FROM Loans WHERE isbn = ? AND return_date IS NULL LIMIT 1
-```
-- If a row exists, status is `"On Loan"`.
-- Otherwise, status is `"On Shelf"`.
-
----
-
-## 🏁 Quickstart
-
-1. Install dependencies:  
-   `pip install flask`
-2. Run the app:  
+1. 依存インストール  
+   `pip install flask requests`
+2. DB初期化  
+   `/initdb` にアクセス
+3. サーバ起動  
    `python app.py`
-3. Use the API endpoints as described
+4. `/books/manage` で書籍追加・編集
