@@ -1,7 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
     const isbnInput = document.getElementById('isbn');
-    const coverInput = document.getElementById('cover_image_path');
-    const coverImg = document.getElementById('cover_preview');
     const form = document.getElementById('manageBookForm');
 
     if (!isbnInput) {
@@ -20,24 +18,15 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-
-    if (coverInput && coverImg) {
-        coverInput.addEventListener('input', function () {
-            coverImg.src = coverInput.value ? '/' + coverInput.value : '';
-        });
-        coverImg.src = coverInput.value ? '/' + coverInput.value : '';
-    }
-
     if (form && form.querySelector('input[name="isbn"]:not([readonly])')) {
         form.addEventListener('submit', async function (e) {
             const isbn = isbnInput.value;
             if (!isbn) return;
             const resp = await fetch(`/books/${isbn}`);
             if (resp.status === 404) {
-                e.preventDefault();
                 await fetchBookInfo();
-                form.submit();
             }
+
         });
     }
 
@@ -77,7 +66,9 @@ async function fetchBookInfo() {
         if (coverImg) {
             coverImg.src = '/' + book.cover_image_path || '';
         }
+
+
     } catch (e) {
-        alert('書籍情報の取得に失敗しました: ' + e);
+        console.error('書籍情報の取得に失敗:', e);
     }
 }

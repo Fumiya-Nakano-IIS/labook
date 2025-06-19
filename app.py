@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory,render_template
 from db import close_connection,init_db,dbname
 from routes import register_blueprints
 import os
@@ -14,7 +14,7 @@ def teardown_db(exception):
 
 @app.route('/')
 def hello_world():
-    return 'Hello World from Raspberry Pi 4!'
+    return render_template('index.html')
 
 @app.route('/backup')
 def backup():

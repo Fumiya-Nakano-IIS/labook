@@ -136,7 +136,6 @@ def normalize_publication_date(pub_date):
     if len(pub_date) == 4 and pub_date.isdigit():
         return pub_date + '-01-01'
 
-
 if __name__ == "__main__":
     import sys, json
     if len(sys.argv) != 2:

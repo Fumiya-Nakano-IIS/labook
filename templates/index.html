@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>laBook</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='index.js') }}"></script>
+</head>
+
+<body>
+    <h1>laBook top</h1>
+    <a href="{{ url_for('books.manage_book_page') }}">Manage Books</a>
+</body>
+
+</html>

@@ -49,11 +49,11 @@
             <tr>
                 <td><label for="cover_image_path">Cover Image Path:</label></td>
                 <td><input type="text" name="cover_image_path" id="cover_image_path"
-                        value="{{ book['cover_image_path'] if book else '' }}"></td>
+                        value="{{ book['cover_image_path'] if book else '' }}" readonly></td>
             </tr>
             <tr>
                 <td><label for="owner_id">Owner ID:</label></td>
-                <td><input type="number" name="owner_id" id="owner_id" value="{{ book['owner_id'] if book else '' }}">
+                <td><input type="number" name="owner_id" id="owner_id" value="{{ book['owner_id'] if book else '0' }}">
                 </td>
             </tr>
             <tr>
