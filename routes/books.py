@@ -3,11 +3,22 @@ from db import get_db
 
 bp = Blueprint('books', __name__, url_prefix='/books')
 
+def get_book_status(db, isbn):
+    cursor = db.execute(
+        "SELECT 1 FROM Loans WHERE isbn = ? AND return_date IS NULL LIMIT 1", (isbn,)
+    )
+    return "On Loan" if cursor.fetchone() else "On Shelf"
+
 @bp.route('', methods=['GET'])
 def list_books():
     db = get_db()
     cursor = db.execute("SELECT * FROM Books")
-    books = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+    books = []
+    columns = [col[0] for col in cursor.description]
+    for row in cursor.fetchall():
+        book = dict(zip(columns, row))
+        book['status'] = get_book_status(db, book['isbn'])
+        books.append(book)
     return jsonify(books)
 
 @bp.route('/<isbn>', methods=['GET'])
@@ -17,7 +28,9 @@ def get_book(isbn):
     row = cursor.fetchone()
     if row is None:
         abort(404, description="Book not found")
-    return jsonify(dict(zip([col[0] for col in cursor.description], row)))
+    book = dict(zip([col[0] for col in cursor.description], row))
+    book['status'] = get_book_status(db, isbn)
+    return jsonify(book)
 
 @bp.route('', methods=['POST'])
 def add_book():

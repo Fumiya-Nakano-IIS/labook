@@ -19,6 +19,7 @@ This schema manages lab library books, their owners, and current lending status.
 | `owner_id`         | INTEGER | FOREIGN KEY → `Users.user_id`      | Owner of the book             |
 | `comment`          | TEXT    |                                    | Free-text memo for notes      |
 | `shelf_code`       | TEXT    | FOREIGN KEY → `Shelves.shelf_code` | Home shelf (default location) |
+
 ---
 
 ### `Shelves`
@@ -38,36 +39,40 @@ This schema manages lab library books, their owners, and current lending status.
 | `user_id`     | INTEGER | PRIMARY KEY AUTOINCREMENT | Unique internal ID |
 | `name`        | TEXT    | NOT NULL                  | User's name        |
 | `email`       | TEXT    |                           | Email address      |
-| `affiliation` | TEXT    |                           | Lab or department  |
 
 ---
 
 ### `Loans`
 
-| Column        | Type    | Constraints                   | Description                         |
-| ------------- | ------- | ----------------------------- | ----------------------------------- |
-| `loan_id`     | INTEGER | PRIMARY KEY AUTOINCREMENT     | Loan record ID                      |
-| `isbn`        | TEXT    | FOREIGN KEY → `Books.isbn`    | ISBN of the borrowed book           |
-| `user_id`     | INTEGER | FOREIGN KEY → `Users.user_id` | Borrowing user                      |
-| `loan_date`   | TEXT    | NOT NULL                      | Checkout date                       |
-| `due_date`    | TEXT    |                               | Expected return date (user input)   |
-| `return_date` | TEXT    |                               | Actual return date (NULL = not yet) |
+| Column        | Type    | Constraints               | Description           |
+| ------------- | ------- | ------------------------- | --------------------- |
+| `loan_id`     | INTEGER | PRIMARY KEY AUTOINCREMENT | Unique loan ID        |
+| `isbn`        | TEXT    | FOREIGN KEY → Books.isbn  | Loaned book           |
+| `user_id`     | INTEGER | FOREIGN KEY → Users.user_id | Borrower             |
+| `loan_date`   | TEXT    | NOT NULL                  | Date loaned out       |
+| `due_date`    | TEXT    |                           | Due date (optional)   |
+| `return_date` | TEXT    |                           | Date returned (NULL if not returned) |
 
 ---
 
-## 📡 REST API Design
+- Cover images are managed via path (e.g. /covers/9781234567890.jpg).
 
-Below are the RESTful API endpoints for managing books, shelves, users, and loans.
+---
 
-### 📚 Books
+## 📡 REST API
 
-| Method | Endpoint        | Description            |
-| ------ | --------------- | ---------------------- |
-| GET    | `/books`        | List all books         |
-| GET    | `/books/<isbn>` | Get details for a book |
-| POST   | `/books`        | Add a new book         |
-| PUT    | `/books/<isbn>` | Update book info       |
-| DELETE | `/books/<isbn>` | Delete a book          |
+The backend is implemented in Flask with endpoints grouped by resource.  
+All endpoints return and accept JSON.
+
+### Books
+
+| Method | Endpoint           | Description                  |
+|--------|--------------------|------------------------------|
+| GET    | `/books`           | List all books (with status) |
+| GET    | `/books/<isbn>`    | Get details for a book (with status) |
+| POST   | `/books`           | Add a new book               |
+| PUT    | `/books/<isbn>`    | Update book info             |
+| DELETE | `/books/<isbn>`    | Delete a book                |
 
 **Book JSON Example:**
 ```json
@@ -80,45 +85,49 @@ Below are the RESTful API endpoints for managing books, shelves, users, and loan
   "cover_image_path": "/covers/9781234567890.jpg",
   "owner_id": 1,
   "comment": "Some notes",
-  "shelf_code": "A1"
+  "shelf_code": "A1",
+  "status": "On Shelf" // or "On Loan"
 }
 ```
 
----
-
-### 🗄️ Shelves
-
-| Method | Endpoint          | Description       |
-| ------ | ----------------- | ----------------- |
-| GET    | `/shelves`        | List all shelves  |
-| GET    | `/shelves/<code>` | Get shelf details |
-| POST   | `/shelves`        | Add a new shelf   |
-| PUT    | `/shelves/<code>` | Update shelf info |
-| DELETE | `/shelves/<code>` | Delete a shelf    |
+**Book Status:**  
+- The `status` field is `"On Loan"` if there is a loan record for the book with `return_date` as NULL, otherwise `"On Shelf"`.
 
 ---
 
-### 👤 Users
+### Shelves
 
-| Method | Endpoint      | Description      |
-| ------ | ------------- | ---------------- |
-| GET    | `/users`      | List all users   |
-| GET    | `/users/<id>` | Get user details |
-| POST   | `/users`      | Add a new user   |
-| PUT    | `/users/<id>` | Update user info |
-| DELETE | `/users/<id>` | Delete a user    |
+| Method | Endpoint             | Description                  |
+|--------|----------------------|------------------------------|
+| GET    | `/shelves`           | List all shelves             |
+| GET    | `/shelves/<code>`    | Get shelf details            |
+| POST   | `/shelves`           | Add a new shelf              |
+| PUT    | `/shelves/<code>`    | Update shelf info            |
+| DELETE | `/shelves/<code>`    | Delete a shelf               |
 
 ---
 
-### 🔄 Loans
+### Users
 
-| Method | Endpoint      | Description                       |
-| ------ | ------------- | --------------------------------- |
-| GET    | `/loans`      | List all loans                    |
-| GET    | `/loans/<id>` | Get loan details                  |
-| POST   | `/loans`      | Create a new loan (checkout book) |
-| PUT    | `/loans/<id>` | Update loan (e.g., return book)   |
-| DELETE | `/loans/<id>` | Delete a loan record              |
+| Method | Endpoint           | Description                  |
+|--------|--------------------|------------------------------|
+| GET    | `/users`           | List all users               |
+| GET    | `/users/<id>`      | Get user details             |
+| POST   | `/users`           | Add a new user               |
+| PUT    | `/users/<id>`      | Update user info             |
+| DELETE | `/users/<id>`      | Delete a user                |
+
+---
+
+### Loans
+
+| Method | Endpoint           | Description                       |
+|--------|--------------------|-----------------------------------|
+| GET    | `/loans`           | List all loans                    |
+| GET    | `/loans/<id>`      | Get loan details                  |
+| POST   | `/loans`           | Create a new loan (checkout book) |
+| PUT    | `/loans/<id>`      | Update loan (e.g., return book)   |
+| DELETE | `/loans/<id>`      | Delete a loan record              |
 
 **Loan JSON Example:**
 ```json
@@ -133,39 +142,40 @@ Below are the RESTful API endpoints for managing books, shelves, users, and loan
 
 ---
 
-### 📖 Book Status
+## 📦 Project Structure
 
-- To get current status (on shelf/on loan), use `/books` or `/books/<isbn>` and include status in the response, using the SQL below.
+```
+labook/
+├── app.py
+├── db.py
+├── routes/
+│   ├── __init__.py
+│   ├── books.py
+│   ├── shelves.py
+│   ├── users.py
+│   └── loans.py
+├── library.db
+├── README.md
+```
 
 ---
 
-## 🔍 How to Determine Current Book Status
+## 🛠️ How Book Status is Determined
 
-- A book is **"on shelf"** if there is no loan record with `return_date IS NULL`.
-- A book is **"on loan"** if there exists a `Loans` record for that ISBN with `return_date IS NULL`.
-
-Example SQL:
+For each book, status is determined by:
 
 ```sql
--- Check current loan status
-SELECT
-  B.isbn,
-  B.title,
-  S.shelf_name,
-  U.name AS current_holder,
-  CASE
-    WHEN L.return_date IS NULL THEN 'On Loan'
-    ELSE 'On Shelf'
-  END AS status
-FROM Books B
-LEFT JOIN Shelves S ON B.shelf_code = S.shelf_code
-LEFT JOIN Loans L ON B.isbn = L.isbn AND L.return_date IS NULL
-LEFT JOIN Users U ON L.user_id = U.user_id;
+SELECT 1 FROM Loans WHERE isbn = ? AND return_date IS NULL LIMIT 1
 ```
+- If a row exists, status is `"On Loan"`.
+- Otherwise, status is `"On Shelf"`.
 
-## 📌 Notes
+---
 
-- Each book has one owner (owner_id), which is a lab member (Users table).
-- Comments allow optional remarks (e.g., damage, language, edition).
-- Lending records are not restricted by copy (still one record per ISBN).
-- Cover images are managed via path (e.g. /covers/9781234567890.jpg).
+## 🏁 Quickstart
+
+1. Install dependencies:  
+   `pip install flask`
+2. Run the app:  
+   `python app.py`
+3. Use the API endpoints as described
