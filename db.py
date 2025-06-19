@@ -2,8 +2,10 @@ import os
 import sqlite3
 from flask import g
 
+dbname = 'library.db'
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE = os.path.join(BASE_DIR, 'library.db')
+DATABASE = os.path.join(BASE_DIR, dbname)
 
 def get_db():
     db = getattr(g, '_database', None)
@@ -15,3 +17,45 @@ def close_connection(exception):
     db = getattr(g, '_database', None)
     if db is not None:
         db.close()
+
+def init_db():
+    from db import get_db
+    db = get_db()
+    db.executescript("""
+    CREATE TABLE IF NOT EXISTS Users (
+        user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT,
+        affiliation TEXT
+    );
+    CREATE TABLE IF NOT EXISTS Shelves (
+        shelf_code TEXT PRIMARY KEY,
+        shelf_name TEXT NOT NULL,
+        location_description TEXT
+    );
+    CREATE TABLE IF NOT EXISTS Books (
+        isbn TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        author TEXT,
+        publisher TEXT,
+        publication_date TEXT,
+        cover_image_path TEXT,
+        owner_id INTEGER,
+        comment TEXT,
+        shelf_code TEXT,
+        FOREIGN KEY(owner_id) REFERENCES Users(user_id),
+        FOREIGN KEY(shelf_code) REFERENCES Shelves(shelf_code)
+    );
+    CREATE TABLE IF NOT EXISTS Loans (
+        loan_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        isbn TEXT,
+        user_id INTEGER,
+        loan_date TEXT NOT NULL,
+        due_date TEXT,
+        return_date TEXT,
+        FOREIGN KEY(isbn) REFERENCES Books(isbn),
+        FOREIGN KEY(user_id) REFERENCES Users(user_id)
+    );
+    """)
+    db.commit()
+    return "Database initialized!"
