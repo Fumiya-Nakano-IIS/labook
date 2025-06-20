@@ -5,12 +5,28 @@
     <title>laBook</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="{{ url_for('static', filename='index.js') }}"></script>
+    <script src="https://kit.fontawesome.com/6be837db5c.js" crossorigin="anonymous"></script>
 </head>
 
 <body>
-    <h1>laBook top</h1>
-    <a href="{{ url_for('books.manage_book_page') }}">Manage Book</a>
+    <a href="./">
+        <h2><i class="fa-solid fa-database"></i>laBook</h2>
+    </a>
 
+    <h3><i class="fa-solid fa-barcode"></i> ISBN:</h3>
+    <input type="number" id="isbnInput" placeholder="input ISBN" onkeydown="ISBNinput(event)">
+    <a href="{{ url_for('books.manage_book_page') }}">
+        <button id="btnManageBook"><i class="fa-solid fa-check"></i></button>
+        Manage Book
+    </a>
+
+    <h3><i class="fa-solid fa-location-dot"></i> Location:</h3>
+    <input type="text" pattern="^[a-zA-Z0-9]+$" id="locationInput" placeholder="ex: A2"
+        onkeydown="Locationinput(event)">
+    <button id="btnStoreSubmit"><i class="fa-solid fa-check"></i></button>
+    <button id="btnContinuousSubmit"><i class="fa-solid fa-check"></i></button>
+    <hr>
+    <br>
     <div style="margin-bottom: 1em;">
         <input type="text" id="searchInput" placeholder="Search keyword...">
         <button type="button" id="searchBtn">Search</button>

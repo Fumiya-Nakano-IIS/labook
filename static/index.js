@@ -80,7 +80,7 @@ async function updateBooksTable(sortKey = currentSortKey, sortOrder = currentSor
             }
             tr.innerHTML = `
                 <td class="clickable-cover" style="cursor:pointer;">
-                    <img src="${book.cover_image_path || ''}" alt="Cover Image" style="max-width: 100px; max-height: 100px;" />
+                    <img src="${book.cover_image_path || ''}" alt="Cover Image" style="max-width: 60px; max-height: 100px;" />
                 </td>
                 <td class="clickable-title" style="cursor:pointer;">${book.title || ''}</td>
                 <td class="searchable-author" style="cursor:pointer;color:#337ab7;text-decoration:underline;">${book.author || ''}</td>

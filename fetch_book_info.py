@@ -3,6 +3,9 @@ import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor
 import keys
 
+import logging
+logger = logging.getLogger(__name__)
+
 def save_cover_image(isbn, url):
     if not url:
         return None
@@ -10,15 +13,14 @@ def save_cover_image(isbn, url):
         response = requests.get(url, stream=True)
         if response.status_code == 200:
             path = f"covers/{isbn}.jpg"
-            if os.path.isfile(path):
-                print(f"Already exists cover image:{isbn}.jpg")
+            if os.path.isfile(path):                
                 return path
             with open(path, "xb") as file:
                 for chunk in response.iter_content(1024):
                     file.write(chunk)
             return path
     except Exception as e:
-        print(f"Error saving cover image: {e}")
+        logger.error(f"Failed to save cover image for {isbn}: {e}")
     return None
 
 def get_ndl_book_info(isbn):
