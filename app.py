@@ -1,9 +1,26 @@
 #! /usr/bin/env python3
 
-from flask import Flask, send_from_directory,render_template
-from db import close_connection,init_db,dbname
-from routes import register_blueprints
+import logging
+from logging.handlers import RotatingFileHandler
 import os
+import threading, time
+from flask import Flask, send_from_directory, render_template
+from db import close_connection, init_db, dbname
+from routes import register_blueprints
+
+log_handler = RotatingFileHandler(
+    "labook.log", maxBytes=5 * 1024 * 1024, backupCount=500, encoding="utf-8"
+)
+log_handler.setLevel(logging.INFO)
+log_handler.setFormatter(logging.Formatter('[%(asctime)s] %(levelname)s in %(module)s: %(message)s'))
+logging.basicConfig(
+    level=logging.INFO,
+    handlers=[
+        log_handler,
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 register_blueprints(app)
@@ -26,6 +43,16 @@ def backup():
     else:
         return "Database file does not exist."
 
+def periodic_backup():
+    time.sleep(604800)
+    while True:
+        try:
+            with app.app_context():
+                backup()
+                logger.info("Periodic backup executed.")
+        except Exception as e:
+            logger.error(f"Periodic backup failed: {e}")
+
 @app.route('/initdb')
 def initdb():
     if app.debug:
@@ -44,4 +71,6 @@ def serve_cover(filename):
     return send_from_directory(covers_dir, filename)
 
 if __name__ == '__main__':
+    t = threading.Thread(target=periodic_backup, daemon=True)
+    t.start()
     app.run(host='0.0.0.0', port=5000, debug=True)

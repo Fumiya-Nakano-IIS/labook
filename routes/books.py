@@ -2,8 +2,10 @@ from flask import Blueprint, request, jsonify, abort, render_template, redirect,
 from db import get_db
 import fetch_book_info
 import requests
+import logging
 
 bp = Blueprint('books', __name__, url_prefix='/books')
+logger = logging.getLogger(__name__)
 
 def get_book_status(db, isbn):
     cursor = db.execute(
@@ -118,8 +120,10 @@ def add_book():
             )
         )
         db.commit()
+        logger.info(f"Book added: {data}")
     except Exception:
         abort(409, description=Exception)
+        logger.error(f"Failed to add book: {data}")
     return jsonify({"message": "Book added"}), 201
 
 @bp.route('/<isbn>', methods=['PUT'])
@@ -146,6 +150,7 @@ def update_book(isbn):
         )
     )
     db.commit()
+    logger.info(f"Book updated: {data}")
     return jsonify({"message": "Book updated"})
 
 @bp.route('/<isbn>', methods=['DELETE'])
@@ -156,6 +161,7 @@ def delete_book(isbn):
         abort(404, description="Book not found")
     db.execute("DELETE FROM Books WHERE isbn = ?", (isbn,))
     db.commit()
+    logger.info(f"Book deleted: {isbn}")
     return jsonify({"message": "Book deleted"})
 
 @bp.route('/api/fetch_book_info/<isbn>')
@@ -168,21 +174,21 @@ def api_fetch_book_info(isbn):
 
 @bp.route('/manage', methods=['GET', 'POST'])
 def manage_book_page():
-    db = get_db()
+    import requests
+    from flask import current_app
+
     error = None
     book = None
     mode = "add"
     isbn = request.args.get('isbn') or (request.form.get('isbn') if request.method == 'POST' else None)
     keep_owner_id = ""
-    keep_shelf_id = ""
+    keep_shelf_code = ""
 
     if isbn:
-        cursor = db.execute("SELECT * FROM Books WHERE isbn = ?", (isbn,))
-        row = cursor.fetchone()
-        if row:
+        resp = requests.get(f"http://localhost:5000/books/{isbn}")
+        if resp.status_code == 200:
+            book = resp.json()
             mode = "edit"
-            columns = [col[0] for col in cursor.description]
-            book = dict(zip(columns, row))
         else:
             import fetch_book_info
             info = fetch_book_info.fetch_book_info(isbn)
@@ -192,46 +198,55 @@ def manage_book_page():
                 book = {"isbn": isbn}
 
     if request.method == 'POST':
-        data = request.form
+        data = request.form.to_dict()
         keep_owner_id = data.get('owner_id', '')
         keep_shelf_code = data.get('shelf_code', '')
+
+        shelf_id = None
+        if data.get('shelf_code'):
+            shelf_resp = requests.get(f"http://localhost:5000/shelves/by_code/{data['shelf_code']}")
+            if shelf_resp.ok:
+                shelf_id = shelf_resp.json()['shelf_id']
+            else:
+                create_resp = requests.post(
+                    "http://localhost:5000/shelves",
+                    json={
+                        "shelf_code": data['shelf_code'],
+                        "location_description": ""
+                    }
+                )
+                if create_resp.ok:
+                    shelf_id = create_resp.json()['shelf_id']
+                else:
+                    error = "failed to make shelf"
+        data['shelf_id'] = shelf_id
+
         if mode == "edit":
-            db.execute(
-                """UPDATE Books SET title=?, author=?, publisher=?, publication_date=?, cover_image_path=?, owner_id=?, comment=?, shelf_id=?
-                   WHERE isbn=?""",
-                (
-                    data.get('title'), data.get('author'), data.get('publisher'),
-                    data.get('publication_date'), data.get('cover_image_path'), data.get('owner_id'),
-                    data.get('comment'), data.get('shelf_id'), data['isbn']
-                )
+            resp = requests.put(
+                f"http://localhost:5000/books/{isbn}",
+                json={**data, "isbn": isbn, "shelf_id": shelf_id}
             )
-            db.commit()
-            return redirect(url_for('manage_book.html'))
         else:
-            try:
-                db.execute(
-                    "INSERT INTO Books (isbn, title, author, publisher, publication_date, cover_image_path, owner_id, comment, shelf_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    (
-                        data['isbn'], data['title'], data.get('author'), data.get('publisher'),
-                        data.get('publication_date'), data.get('cover_image_path'), data.get('owner_id'),
-                        data.get('comment'), data.get('shelf_id')
-                    )
-                )
-                db.commit()
-                book = {"owner_id": keep_owner_id, "shelf_id": keep_shelf_id}
-                mode = "add"
-                return render_template('manage_book.html', book=book, error=None, mode=mode)
-            except Exception as e:
-                error = str(e)
-    if mode == "add" and (keep_owner_id or keep_shelf_id):
+            resp = requests.post(
+                "http://localhost:5000/books",
+                json={**data, "isbn": isbn, "shelf_id": shelf_id}
+            )
+        if resp.ok:
+            return redirect(url_for('books.manage_book_page', isbn=isbn))
+        else:
+            error = resp.json().get('description', 'failed to book register')
+
+    if book and book.get('shelf_id'):
+        shelf_resp = requests.get(f"http://localhost:5000/shelves/{book['shelf_id']}")
+        if shelf_resp.ok:
+            shelf = shelf_resp.json()
+            book['shelf_code'] = shelf.get('shelf_code', '')
+        else:
+            book['shelf_code'] = ""
+    if mode == "add" and (keep_owner_id or keep_shelf_code):
         if not book:
             book = {}
         book['owner_id'] = keep_owner_id
         book['shelf_code'] = keep_shelf_code
-    if book and book.get('shelf_id'):
-        shelf_code = db.execute("SELECT shelf_code FROM Shelves WHERE shelf_id = ?", (book['shelf_id'],)).fetchone()
-        if shelf_code:
-            book['shelf_code'] = shelf_code[0]
-        else:
-            book['shelf_code'] = ""
+
     return render_template('manage_book.html', book=book, error=error, mode=mode)

@@ -8,3 +8,4 @@ covers/*
 
 ACTIVATE.sh
 DEBUG.sh
+*.log
