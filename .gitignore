@@ -1,6 +1,10 @@
 venv/*
 __pycache__/*
+notes/*
 *.pyc
 keys.py
 covers/*
 *.db
+
+ACTIVATE.sh
+DEBUG.sh

@@ -4,6 +4,7 @@
 <head>
     <title>{% if mode == "edit" %}Edit{% else %}Add{% endif %} Book</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='general.js') }}"></script>
     <script src="{{ url_for('static', filename='book_form.js') }}"></script>
 </head>
 
@@ -12,7 +13,7 @@
     {% if error %}
     <div style="color:red;">Error: {{ error }}</div>
     {% endif %}
-    <form method="post" id="manageBookForm">
+    <form method="post" id="manageBookForm" data-mode="{{ mode }}">
         <table class="book-form-table">
             <tr>
                 <td><label for="isbn">ISBN:</label></td>
@@ -22,7 +23,16 @@
                 </td>
             </tr>
             <tr>
-                <td><label for="fetchBookInfoBtn"></label></td>
+                <td align="right" valign="bottom"><label for="fetchBookInfoLoading"></label><span id="loadingSpinner"
+                        style="display:none;">
+                        <svg width="20" height="20" viewBox="0 0 50 50">
+                            <circle cx="25" cy="25" r="20" fill="none" stroke="#888" stroke-width="5"
+                                stroke-linecap="round" stroke-dasharray="90 150" stroke-dashoffset="0">
+                                <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25"
+                                    dur="1s" repeatCount="indefinite" />
+                            </circle>
+                        </svg>
+                    </span></td>
                 <td>
                     <button type="button" id="fetchBookInfoBtn" onclick="fetchBookInfo()">fetch online info</button>
                 </td>
@@ -49,7 +59,7 @@
             <tr>
                 <td><label for="cover_image_path">Cover Image Path:</label></td>
                 <td><input type="text" name="cover_image_path" id="cover_image_path"
-                        value="{{ book['cover_image_path'] if book else '' }}" readonly></td>
+                        value="{{ book['cover_image_path'] if book else '' }}"></td>
             </tr>
             <tr>
                 <td><label for="owner_id">Owner ID:</label></td>

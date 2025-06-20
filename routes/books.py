@@ -13,7 +13,19 @@ def get_book_status(db, isbn):
 @bp.route('', methods=['GET'])
 def list_books():
     db = get_db()
-    cursor = db.execute("SELECT * FROM Books")
+    sort_key = request.args.get('sort', 'updatedtime') 
+    order = request.args.get('order', 'desc')     
+    offset = request.args.get('offset', type=int, default=0)
+    limit = request.args.get('limit', type=int, default=100)
+
+    valid_sort_keys = {'isbn', 'title', 'author', 'publisher', 'publication_date', 'updatedtime', 'shelf_code', 'owner_id'}
+    if sort_key not in valid_sort_keys:
+        sort_key = 'title'
+    if order not in {'asc', 'desc'}:
+        order = 'asc'
+
+    sql = f"SELECT * FROM Books ORDER BY {sort_key} {order.upper()} LIMIT ? OFFSET ?"
+    cursor = db.execute(sql, (limit, offset))
     books = []
     columns = [col[0] for col in cursor.description]
     for row in cursor.fetchall():
@@ -132,7 +144,7 @@ def manage_book_page():
                 )
             )
             db.commit()
-            return redirect(url_for('books.list_books'))
+            return redirect(url_for('manage_book.html'))
         else:
             try:
                 db.execute(

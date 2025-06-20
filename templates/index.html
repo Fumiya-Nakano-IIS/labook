@@ -10,6 +10,24 @@
 <body>
     <h1>laBook top</h1>
     <a href="{{ url_for('books.manage_book_page') }}">Manage Books</a>
+
+    <h2>Books List</h2>
+    <table id="booksTable" class="book-form-table">
+        <thead>
+            <tr>
+                <th>Cover</th>
+                <th>ISBN</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Publisher</th>
+                <th>Publication Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Filled by index.js -->
+        </tbody>
+    </table>
 </body>
 
 </html>

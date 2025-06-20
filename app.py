@@ -30,6 +30,9 @@ def backup():
 def initdb():
     if app.debug:
         backup()
+        import shutil
+        if os.path.exists(dbname):
+            os.remove(dbname)
         init_db()
         return "Database initialized!"
     else:

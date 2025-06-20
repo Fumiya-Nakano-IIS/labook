@@ -40,9 +40,10 @@ def init_db():
         publisher TEXT,
         publication_date TEXT,
         cover_image_path TEXT,
-        owner_id INTEGER,
+        owner_id INTEGER DEFAULT 0,
         comment TEXT,
         shelf_code TEXT,
+        updatedtime TEXT DEFAULT (CURRENT_TIMESTAMP),
         FOREIGN KEY(owner_id) REFERENCES Users(user_id),
         FOREIGN KEY(shelf_code) REFERENCES Shelves(shelf_code)
     );
@@ -58,6 +59,12 @@ def init_db():
         FOREIGN KEY(borrower_id) REFERENCES Users(user_id),
         FOREIGN KEY(returner_id) REFERENCES Users(user_id)
     );
+    CREATE TRIGGER IF NOT EXISTS update_books_updatedtime
+    AFTER UPDATE ON Books
+    FOR EACH ROW
+    BEGIN
+        UPDATE Books SET updatedtime = CURRENT_TIMESTAMP WHERE isbn = OLD.isbn;
+    END;
     """)
     db.commit()
     return "Database initialized!"
