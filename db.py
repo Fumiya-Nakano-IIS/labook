@@ -30,7 +30,7 @@ def init_db():
     );
     CREATE TABLE IF NOT EXISTS Shelves (
         shelf_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        shelf_code TEXT NOT NULL,
+        shelf_code TEXT NOT NULL UNIQUE,
         location_description TEXT
     );
     CREATE TABLE IF NOT EXISTS Books (
@@ -42,10 +42,10 @@ def init_db():
         cover_image_path TEXT,
         owner_id INTEGER DEFAULT 0,
         comment TEXT,
-        shelf_code TEXT,
+        shelf_id INTEGER,
         updatedtime TEXT DEFAULT (CURRENT_TIMESTAMP),
         FOREIGN KEY(owner_id) REFERENCES Users(user_id),
-        FOREIGN KEY(shelf_code) REFERENCES Shelves(shelf_code)
+        FOREIGN KEY(shelf_id) REFERENCES Shelves(shelf_id)
     );
     CREATE TABLE IF NOT EXISTS Loans (
         loan_id INTEGER PRIMARY KEY AUTOINCREMENT,

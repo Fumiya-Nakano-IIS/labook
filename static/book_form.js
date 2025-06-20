@@ -1,4 +1,3 @@
-
 async function transferToEditPage(isbn) {
     const form = document.getElementById('manageBookForm');
     const mode = form.getAttribute('data-mode');
@@ -11,10 +10,22 @@ async function transferToEditPage(isbn) {
     return false;
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-
+document.addEventListener('DOMContentLoaded', async function () {
     const isbnInput = document.getElementById('isbn');
     const form = document.getElementById('manageBookForm');
+    const shelfCodeInput = document.getElementById('shelf_code');
+
+    if (shelfCodeInput && shelfCodeInput.value && !isNaN(shelfCodeInput.value)) {
+
+        try {
+            const resp = await fetch(`/shelves/${shelfCodeInput.value}`);
+            if (resp.ok) {
+                const shelf = await resp.json();
+                if (shelf.shelf_code) shelfCodeInput.value = shelf.shelf_code;
+            }
+        } catch (e) {
+        }
+    }
 
     if (!isbnInput || !form) {
         console.error('ISBN input or form not found');
@@ -22,7 +33,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     isbnInput.addEventListener('change', async function () {
-        const isbn = isbnInput.value;
         fetchBookInfo();
     });
 
@@ -40,6 +50,36 @@ document.addEventListener('DOMContentLoaded', function () {
         const formData = new FormData(form);
         const data = {};
         formData.forEach((v, k) => data[k] = v);
+
+        if (data.shelf_code) {
+            try {
+                const resp = await fetch(`/shelves/by_code/${encodeURIComponent(data.shelf_code)}`);
+                if (resp.ok) {
+                    const shelf = await resp.json();
+                    data.shelf_id = shelf.shelf_id;
+                } else if (data.shelf_code) {
+                    const createResp = await fetch('/shelves', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            shelf_code: data.shelf_code,
+                            location_description: ''
+                        })
+                    });
+                    if (createResp.ok) {
+                        const shelf = await createResp.json();
+                        data.shelf_id = shelf.shelf_id;
+                    } else {
+                        alert('Failed to create shelf.');
+                        return;
+                    }
+                }
+            } catch (e) {
+                alert('Failed to resolve shelf code.');
+                return;
+            }
+        }
+        delete data.shelf_code;
 
         let url, method;
         const mode = form.getAttribute('data-mode');
@@ -64,7 +104,6 @@ document.addEventListener('DOMContentLoaded', function () {
             alert('Error: ' + (err.description || resp.statusText));
         }
     });
-
 
     isbnInput.focus();
 });

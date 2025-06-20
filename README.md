@@ -18,17 +18,18 @@
 | `cover_image_path` | TEXT    |                                  | 表紙画像パス           |
 | `owner_id`         | INTEGER | FOREIGN KEY → `Users.user_id`    | 所有者                 |
 | `comment`          | TEXT    |                                  | メモ                   |
-| `shelf_code`       | TEXT    | FOREIGN KEY → `Shelves.shelf_id` | 所蔵棚                 |
+| `shelf_id`         | INTEGER | FOREIGN KEY → `Shelves.shelf_id` | 所蔵棚                 |
 
 ---
 
 ### `Shelves`
 
-| カラム名               | 型      | 制約                      | 説明           |
-| ---------------------- | ------- | ------------------------- | -------------- |
-| `shelf_id`             | INTEGER | PRIMARY KEY AUTOINCREMENT | 棚ID（例: A1） |
-| `shelf_code`           | TEXT    | NOT NULL                  | 棚の表示名     |
-| `location_description` | TEXT    |                           | 棚の説明       |
+| カラム名               | 型      | 制約                      | 説明               |
+| ---------------------- | ------- | ------------------------- | ------------------ |
+| `shelf_id`             | INTEGER | PRIMARY KEY AUTOINCREMENT | 棚ID               |
+| `shelf_code`           | TEXT    | UNIQUE NOT NULL           | 棚コード（例: A1） |
+| `location_description` | TEXT    |                           | 棚の説明           |
+
 
 ---
 
@@ -101,6 +102,9 @@ Flaskで実装。全てJSONでやりとりします。
 | POST   | `/shelves`        | 棚追加     |
 | PUT    | `/shelves/<code>` | 棚情報更新 |
 | DELETE | `/shelves/<code>` | 棚削除     |
+
+- すべての操作は`shelf_code`で行います。`shelf_id`は自動採番されますが、ユーザーは`shelf_code`のみを指定します。
+- 追加時は`shelf_code`の重複が許されません。
 
 ---
 

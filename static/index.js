@@ -26,9 +26,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     currentSortOrder = 'asc';
                 }
                 document.querySelectorAll('#booksTable thead th').forEach((th2, i2) => {
-                    th2.textContent = th2.textContent.replace(' ▼', '△').replace(' ▲', '△');
+                    th2.textContent = th2.textContent.replace(' ▼', ' ▽').replace(' ▲', ' △');
                     if (i2 === idx) {
-                        th2.textContent = th2.textContent.replace('△', currentSortOrder === 'asc' ? ' ▼' : ' ▲');
+                        th2.textContent = th2.textContent.replace(' ▽', '').replace(' △', '') + (currentSortOrder === 'asc' ? ' ▲' : ' ▼');
                     }
                 });
                 updateBooksTable();
@@ -66,6 +66,18 @@ async function updateBooksTable(sortKey = currentSortKey, sortOrder = currentSor
         tableBody.innerHTML = '';
         for (const book of books) {
             const tr = document.createElement('tr');
+            let bookShelfCode = '';
+            if (book.shelf_id) {
+                try {
+                    const shelfResp = await fetch(`/shelves/${book.shelf_id}`);
+                    if (shelfResp.ok) {
+                        const shelfData = await shelfResp.json();
+                        bookShelfCode = shelfData.shelf_code || '';
+                    }
+                } catch (err) {
+                    bookShelfCode = '';
+                }
+            }
             tr.innerHTML = `
                 <td class="clickable-cover" style="cursor:pointer;">
                     <img src="${book.cover_image_path || ''}" alt="Cover Image" style="max-width: 100px; max-height: 100px;" />
@@ -74,7 +86,7 @@ async function updateBooksTable(sortKey = currentSortKey, sortOrder = currentSor
                 <td class="searchable-author" style="cursor:pointer;color:#337ab7;text-decoration:underline;">${book.author || ''}</td>
                 <td class="searchable-publisher" style="cursor:pointer;color:#337ab7;text-decoration:underline;">${book.publisher || ''}</td>
                 <td>${book.publication_date || ''}</td>
-                <td class="searchable-shelf" style="cursor:pointer;color:#337ab7;text-decoration:underline;">${book.shelf_code || ''}</td>
+                <td class="searchable-shelf" style="cursor:pointer;color:#337ab7;text-decoration:underline;">${bookShelfCode || ''}</td>
                 ${book.status ? `<td class="searchable-borrower" style="cursor:pointer;color:#337ab7;text-decoration:underline;">${book.borrower_id}</td>` : `<td>Available</td>`}                
             `;
             tr.querySelector('.clickable-cover')?.addEventListener('click', function () {
@@ -100,8 +112,8 @@ async function updateBooksTable(sortKey = currentSortKey, sortOrder = currentSor
                 }
             });
             tr.querySelector('.searchable-shelf')?.addEventListener('click', function () {
-                if (book.shelf_code) {
-                    document.getElementById('searchInput').value = book.shelf_code;
+                if (bookShelfCode) {
+                    document.getElementById('searchInput').value = "shelf_id:" + String(book.shelf_id);
                     updateBooksTable();
                 }
             });
