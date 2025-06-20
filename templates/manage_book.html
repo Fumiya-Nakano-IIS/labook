@@ -18,7 +18,7 @@
             <tr>
                 <td><label for="isbn">ISBN:</label></td>
                 <td>
-                    <input type="text" name="isbn" id="isbn" value="{{ book['isbn'] if book else '' }}" {% if
+                    <input type="number" name="isbn" id="isbn" value="{{ book['isbn'] if book else '' }}" {% if
                         mode=="edit" %}readonly{% endif %} required>
                 </td>
             </tr>

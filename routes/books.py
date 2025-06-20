@@ -8,7 +8,20 @@ def get_book_status(db, isbn):
     cursor = db.execute(
         "SELECT 1 FROM Loans WHERE isbn = ? AND return_date IS NULL LIMIT 1", (isbn,)
     )
-    return "On Loan" if cursor.fetchone() else "On Shelf"
+    if cursor.fetchone() is None:
+        return None
+    else:   
+        user = db.execute(
+            "SELECT borrower_id FROM Loans WHERE isbn = ? AND return_date IS NULL LIMIT 1", (isbn,)
+        ).fetchone()
+        if user:
+            user_id = user[0]
+            cursor = db.execute("SELECT name FROM Users WHERE user_id = ?", (user_id,))
+            borrower = cursor.fetchone()
+            if borrower:
+                return f"{borrower[0]}"
+        else:            
+            return "Error: No borrower found"
 
 @bp.route('', methods=['GET'])
 def list_books():
@@ -17,15 +30,23 @@ def list_books():
     order = request.args.get('order', 'desc')     
     offset = request.args.get('offset', type=int, default=0)
     limit = request.args.get('limit', type=int, default=100)
+    keyword = request.args.get('keyword', '').strip()
 
-    valid_sort_keys = {'isbn', 'title', 'author', 'publisher', 'publication_date', 'updatedtime', 'shelf_code', 'owner_id'}
+    valid_sort_keys = {'isbn', 'title', 'author', 'publisher', 'publication_date', 'updatedtime', 'shelf_code'}
     if sort_key not in valid_sort_keys:
         sort_key = 'title'
     if order not in {'asc', 'desc'}:
         order = 'asc'
 
-    sql = f"SELECT * FROM Books ORDER BY {sort_key} {order.upper()} LIMIT ? OFFSET ?"
-    cursor = db.execute(sql, (limit, offset))
+    sql = f"SELECT * FROM Books"
+    params = []
+    if keyword:
+        sql += " WHERE title LIKE ? OR author LIKE ? OR publisher LIKE ? OR isbn LIKE ? OR shelf_code LIKE ? "
+        kw = f"%{keyword}%"
+        params.extend([kw, kw, kw, keyword, keyword])
+    sql += f" ORDER BY {sort_key} {order.upper()} LIMIT ? OFFSET ?"
+    params.extend([limit, offset])
+    cursor = db.execute(sql, params)
     books = []
     columns = [col[0] for col in cursor.description]
     for row in cursor.fetchall():

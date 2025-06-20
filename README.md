@@ -8,37 +8,38 @@
 
 ### `Books`
 
-| カラム名           | 型      | 制約                               | 説明                   |
-| ------------------ | ------- | ---------------------------------- | ---------------------- |
-| `isbn`             | TEXT    | PRIMARY KEY                        | 書籍のISBN（ユニーク） |
-| `title`            | TEXT    | NOT NULL                           | 書名                   |
-| `author`           | TEXT    |                                    | 著者                   |
-| `publisher`        | TEXT    |                                    | 出版社                 |
-| `publication_date` | TEXT    |                                    | 出版日                 |
-| `cover_image_path` | TEXT    |                                    | 表紙画像パス           |
-| `owner_id`         | INTEGER | FOREIGN KEY → `Users.user_id`      | 所有者                 |
-| `comment`          | TEXT    |                                    | メモ                   |
-| `shelf_code`       | TEXT    | FOREIGN KEY → `Shelves.shelf_code` | 所蔵棚                 |
+| カラム名           | 型      | 制約                             | 説明                   |
+| ------------------ | ------- | -------------------------------- | ---------------------- |
+| `isbn`             | INTEGER | PRIMARY KEY                      | 書籍のISBN（ユニーク） |
+| `title`            | TEXT    | NOT NULL                         | 書名                   |
+| `author`           | TEXT    |                                  | 著者                   |
+| `publisher`        | TEXT    |                                  | 出版社                 |
+| `publication_date` | TEXT    |                                  | 出版日                 |
+| `cover_image_path` | TEXT    |                                  | 表紙画像パス           |
+| `owner_id`         | INTEGER | FOREIGN KEY → `Users.user_id`    | 所有者                 |
+| `comment`          | TEXT    |                                  | メモ                   |
+| `shelf_code`       | TEXT    | FOREIGN KEY → `Shelves.shelf_id` | 所蔵棚                 |
 
 ---
 
 ### `Shelves`
 
-| カラム名               | 型   | 制約        | 説明           |
-| ---------------------- | ---- | ----------- | -------------- |
-| `shelf_code`           | TEXT | PRIMARY KEY | 棚ID（例: A1） |
-| `shelf_name`           | TEXT | NOT NULL    | 棚の表示名     |
-| `location_description` | TEXT |             | 棚の説明       |
+| カラム名               | 型      | 制約                      | 説明           |
+| ---------------------- | ------- | ------------------------- | -------------- |
+| `shelf_id`             | INTEGER | PRIMARY KEY AUTOINCREMENT | 棚ID（例: A1） |
+| `shelf_code`           | TEXT    | NOT NULL                  | 棚の表示名     |
+| `location_description` | TEXT    |                           | 棚の説明       |
 
 ---
 
 ### `Users`
 
-| カラム名  | 型      | 制約                      | 説明           |
-| --------- | ------- | ------------------------- | -------------- |
-| `user_id` | INTEGER | PRIMARY KEY AUTOINCREMENT | ユーザーID     |
-| `name`    | TEXT    | NOT NULL                  | 氏名           |
-| `email`   | TEXT    |                           | メールアドレス |
+| カラム名      | 型      | 制約                      | 説明           |
+| ------------- | ------- | ------------------------- | -------------- |
+| `user_id`     | INTEGER | PRIMARY KEY AUTOINCREMENT | ユーザーID     |
+| `name`        | TEXT    | NOT NULL                  | 氏名           |
+| `email`       | TEXT    |                           | メールアドレス |
+| `affiliation` | TEXT    |                           | 所属           |
 
 ---
 

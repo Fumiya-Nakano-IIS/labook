@@ -29,12 +29,12 @@ def init_db():
         affiliation TEXT
     );
     CREATE TABLE IF NOT EXISTS Shelves (
-        shelf_code TEXT PRIMARY KEY,
-        shelf_name TEXT NOT NULL,
+        shelf_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        shelf_code TEXT NOT NULL,
         location_description TEXT
     );
     CREATE TABLE IF NOT EXISTS Books (
-        isbn TEXT PRIMARY KEY,
+        isbn INTEGER PRIMARY KEY,
         title TEXT NOT NULL,
         author TEXT,
         publisher TEXT,

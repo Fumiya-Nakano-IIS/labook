@@ -9,19 +9,23 @@
 
 <body>
     <h1>laBook top</h1>
-    <a href="{{ url_for('books.manage_book_page') }}">Manage Books</a>
+    <a href="{{ url_for('books.manage_book_page') }}">Manage Book</a>
 
-    <h2>Books List</h2>
+    <div style="margin-bottom: 1em;">
+        <input type="text" id="searchInput" placeholder="Search keyword...">
+        <button type="button" id="searchBtn">Search</button>
+        <button type="button" id="resetBtn">Reset</button>
+    </div>
     <table id="booksTable" class="book-form-table">
         <thead>
             <tr>
                 <th>Cover</th>
-                <th>ISBN</th>
-                <th>Title</th>
-                <th>Author</th>
-                <th>Publisher</th>
-                <th>Publication Date</th>
-                <th>Status</th>
+                <th>Title △</th>
+                <th>Author △</th>
+                <th>Publisher △</th>
+                <th>Published △</th>
+                <th>Location △</th>
+                <th>Status □</th>
             </tr>
         </thead>
         <tbody>
