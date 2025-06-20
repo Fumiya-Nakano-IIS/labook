@@ -9,32 +9,25 @@
 </head>
 
 <body>
-    <h1>{% if mode == "edit" %}Edit{% else %}Add{% endif %} Book</h1>
     {% if error %}
     <div style="color:red;">Error: {{ error }}</div>
     {% endif %}
+    <img id="cover_preview"
+        src="/{{ book['cover_image_path'] if book and book['cover_image_path'] else '' }}"
+        alt="No Image">
     <form method="post" id="manageBookForm" data-mode="{{ mode }}">
         <table class="book-form-table">
             <tr>
-                <td><label for="isbn">ISBN:</label></td>
+                <td>
+                    <label for="isbn">ISBN:</label>
+                </td>
                 <td>
                     <input type="number" name="isbn" id="isbn" value="{{ book['isbn'] if book else '' }}" {% if
-                        mode=="edit" %}readonly{% endif %} required>
-                </td>
-            </tr>
-            <tr>
-                <td align="right" valign="bottom"><label for="fetchBookInfoLoading"></label><span id="loadingSpinner"
-                        style="display:none;">
-                        <svg width="20" height="20" viewBox="0 0 50 50">
-                            <circle cx="25" cy="25" r="20" fill="none" stroke="#888" stroke-width="5"
-                                stroke-linecap="round" stroke-dasharray="90 150" stroke-dashoffset="0">
-                                <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25"
-                                    dur="1s" repeatCount="indefinite" />
-                            </circle>
-                        </svg>
-                    </span></td>
-                <td>
-                    <button type="button" id="fetchBookInfoBtn" onclick="fetchBookInfo()">fetch online info</button>
+                        mode=="edit" %}readonly{% endif %} required><button type="button" id="fetchBookInfoBtn" onclick="fetchBookInfo()">f</button><span id="loadingSpinner" style="display:none;"><svg width="20" height="20" viewBox="0 0 50 50">
+                                <circle cx="25" cy="25" r="20" fill="none" stroke="#888" stroke-width="5" stroke-linecap="round" stroke-dasharray="90 150" stroke-dashoffset="0">
+                                    <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite" />
+                                </circle> </svg></span>
+                    </span>
                 </td>
             </tr>
             <tr>
@@ -78,14 +71,6 @@
             <tr>
                 <td></td>
                 <td><input type="submit" value="{% if mode == 'edit' %}Update{% else %}Add{% endif %} Book"></td>
-            </tr>
-            <tr>
-                <td><label>Cover Preview:</label></td>
-                <td>
-                    <img id="cover_preview"
-                        src="/{{ book['cover_image_path'] if book and book['cover_image_path'] else '' }}"
-                        alt="No Image">
-                </td>
             </tr>
         </table>
     </form>

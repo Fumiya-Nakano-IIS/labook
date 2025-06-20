@@ -4,7 +4,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 import os
 import threading, time
-from flask import Flask, send_from_directory, render_template
+from flask import Flask, send_from_directory, render_template, Response
 from db import close_connection, init_db, dbname
 from routes import register_blueprints
 
@@ -24,6 +24,11 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 register_blueprints(app)
+
+@app.after_request
+def add_ngrok_header(response: Response):
+    response.headers['ngrok-skip-browser-warning'] = 'true'
+    return response
 
 @app.teardown_appcontext
 def teardown_db(exception):

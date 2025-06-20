@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.querySelectorAll('#booksTable thead th').forEach((th, idx) => {
         const keyMap = ['cover_image_path', 'title', 'author', 'publisher', 'publication_date', 'shelf_code', 'status'];
-        if (idx === 0) return;
+        if (idx === 0 || idx === 5) return;
         if (idx === 6) {
             th.style.cursor = 'pointer';
             th.addEventListener('click', function () {
@@ -82,12 +82,12 @@ async function updateBooksTable(sortKey = currentSortKey, sortOrder = currentSor
                 <td class="clickable-cover" style="cursor:pointer;">
                     <img src="${book.cover_image_path || ''}" alt="Cover Image" style="max-width: 60px; max-height: 100px;" />
                 </td>
-                <td class="clickable-title" style="cursor:pointer;">${book.title || ''}</td>
-                <td class="searchable-author" style="cursor:pointer;color:#337ab7;text-decoration:underline;">${book.author || ''}</td>
-                <td class="searchable-publisher" style="cursor:pointer;color:#337ab7;text-decoration:underline;">${book.publisher || ''}</td>
-                <td>${book.publication_date || ''}</td>
-                <td class="searchable-shelf" style="cursor:pointer;color:#337ab7;text-decoration:underline;">${bookShelfCode || ''}</td>
-                ${book.status ? `<td class="searchable-borrower" style="cursor:pointer;color:#337ab7;text-decoration:underline;">${book.borrower_id}</td>` : `<td>Available</td>`}                
+                <td class="clickable-title" style="cursor:pointer;"><a class='book-title'>${book.title || ''}</a></td>
+                <td class="searchable-author" style="cursor:pointer">${book.author || ''}</td>
+                <td class="searchable-publisher" style="cursor:pointer">${book.publisher || ''}</td>
+                <td class="searchable-publication-date" style="cursor:pointer">${book.publication_date || ''}</td>
+                <td class="searchable-shelf" style="cursor:pointer">${bookShelfCode || ''}</td>
+                ${book.status ? `<td class="searchable-borrower" style="cursor:pointer">${book.borrower_id}</td>` : `<td>Available</td>`}
             `;
             tr.querySelector('.clickable-cover')?.addEventListener('click', function () {
                 if (book.isbn) {
