@@ -22,13 +22,20 @@ def get_loan(loan_id):
 @bp.route('', methods=['POST'])
 def add_loan():
     data = request.get_json()
-    required = ['isbn', 'user_id', 'loan_date']
+    required = ['isbn', 'borrower_id', 'loan_date']
     if not all(k in data for k in required):
         abort(400, description="Missing required fields")
     db = get_db()
     db.execute(
-        "INSERT INTO Loans (isbn, user_id, loan_date, due_date, return_date) VALUES (?, ?, ?, ?, ?)",
-        (data['isbn'], data['user_id'], data['loan_date'], data.get('due_date'), data.get('return_date'))
+        "INSERT INTO Loans (isbn, borrower_id, returner_id, loan_date, due_date, return_date) VALUES (?, ?, ?, ?, ?, ?)",
+        (
+            data['isbn'],
+            data['borrower_id'],
+            data.get('returner_id'),
+            data['loan_date'],
+            data.get('due_date'),
+            data.get('return_date')
+        )
     )
     db.commit()
     return jsonify({"message": "Loan created"}), 201
@@ -41,10 +48,15 @@ def update_loan(loan_id):
     if cursor.fetchone() is None:
         abort(404, description="Loan not found")
     db.execute(
-        "UPDATE Loans SET isbn=?, user_id=?, loan_date=?, due_date=?, return_date=? WHERE loan_id=?",
+        "UPDATE Loans SET isbn=?, borrower_id=?, returner_id=?, loan_date=?, due_date=?, return_date=? WHERE loan_id=?",
         (
-            data.get('isbn'), data.get('user_id'), data.get('loan_date'),
-            data.get('due_date'), data.get('return_date'), loan_id
+            data.get('isbn'),
+            data.get('borrower_id'),
+            data.get('returner_id'),
+            data.get('loan_date'),
+            data.get('due_date'),
+            data.get('return_date'),
+            loan_id
         )
     )
     db.commit()

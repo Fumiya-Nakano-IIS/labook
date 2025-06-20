@@ -49,12 +49,14 @@ def init_db():
     CREATE TABLE IF NOT EXISTS Loans (
         loan_id INTEGER PRIMARY KEY AUTOINCREMENT,
         isbn TEXT,
-        user_id INTEGER,
+        borrower_id INTEGER,
+        returner_id INTEGER,
         loan_date TEXT NOT NULL,
         due_date TEXT,
         return_date TEXT,
         FOREIGN KEY(isbn) REFERENCES Books(isbn),
-        FOREIGN KEY(user_id) REFERENCES Users(user_id)
+        FOREIGN KEY(borrower_id) REFERENCES Users(user_id),
+        FOREIGN KEY(returner_id) REFERENCES Users(user_id)
     );
     """)
     db.commit()
