@@ -5,6 +5,7 @@
     <title>laBook</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="{{ url_for('static', filename='index.js') }}"></script>
+    <script src="{{ url_for('static', filename='general.js') }}"></script>
     <script src="https://kit.fontawesome.com/6be837db5c.js" crossorigin="anonymous"></script>
 </head>
 
@@ -16,6 +17,7 @@
     <input type="text" id="searchInput" placeholder="ISBN / Title / Author / Publisher">
     <button type="button" id="searchBtn"><i class="fas fa-search" aria-hidden="true"></i></button>
     <button type="button" id="resetBtn"><i class="fas fa-undo" aria-hidden="true"></i></button>
+    <span id="spnLockMode">&emsp;</span>
     <button type="button" id="addBookBtn"><i class="fas fa-book-medical" aria-hidden="true"></i> add book</button>
 
     <table id="booksTable" class="book-form-table">
@@ -35,7 +37,7 @@
                     <span class="indicator"></span>
                 </th>
                 <th data-key="publication_date">
-                    Published
+                    Publish
                     <span class="indicator"></span>
                 </th>
                 <th>Location</th>

@@ -254,7 +254,7 @@ async function preLoanProcess() {
     }
 }
 
-async function returnBookMethod(isbn, user_id) {
+async function returnBookMethod(user_id) {
     const itxLoanId = document.getElementById('itxLoanId')
     loan_id = itxLoanId.value;
     try {
@@ -287,8 +287,8 @@ async function borrowBook() {
 
     const btnReturnBook = document.getElementById('btnReturnBook');
     if (btnReturnBook.style.display !== 'none') {
-        alert('Returning book before borrowing.');
-        if (!await returnBookMethod(isbn, user_id)) {
+        alert('Returning book before borrowing...');
+        if (!await returnBookMethod(user_id)) {
             return false;
         }
     }
@@ -298,7 +298,7 @@ async function borrowBook() {
         body: JSON.stringify({ isbn: isbn, borrower_id: user_id })
     });
     if (respLoan.ok) {
-        alert('Book borrowed successfully.');
+        alert('Book < ' + document.getElementById('title').value + ' >\n is borrowed by < ' + document.getElementById('itxName').value + ' > successfully.');
         window.location.href = '/';
     } else {
         const err = await respLoan.json();
@@ -308,13 +308,11 @@ async function borrowBook() {
 }
 
 async function returnBook() {
-
     user_id = await preLoanProcess();
     if (user_id === false) return false;
-    const isbn = document.getElementById('isbn').value;
 
-    if (await returnBookMethod(isbn, user_id)) {
-        alert('Book returned successfully.');
+    if (await returnBookMethod(user_id)) {
+        alert('Book < ' + document.getElementById('title').value + ' > \n is returned successfully.');
         window.location.href = '/';
     } else {
         return false;

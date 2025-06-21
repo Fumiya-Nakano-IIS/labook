@@ -187,6 +187,30 @@ def update_book(isbn):
     return jsonify({"message": "Book updated"})
 
 
+@bp.route("/move/<isbn>", methods=["PUT"])
+def move_book(isbn):
+    data = request.get_json()
+    db = get_db()
+    cursor = db.execute("SELECT * FROM Books WHERE isbn = ?", (isbn,))
+    if cursor.fetchone() is None:
+        abort(404, description="Book not found")
+    shelf_id = data.get("shelf_id")
+    if not shelf_id and data.get("shelf_code"):
+        shelf_id = get_or_create_shelf_id(
+            data["shelf_code"], data.get("shelf_name"), data.get("location_description")
+        )
+    db.execute(
+        """UPDATE Books SET shelf_id=? WHERE isbn=?""",
+        (
+            shelf_id,
+            isbn,
+        ),
+    )
+    db.commit()
+    logger.info(f"Book moved: {data}")
+    return jsonify({"message": "Book updated"})
+
+
 @bp.route("/<isbn>", methods=["DELETE"])
 def delete_book(isbn):
     db = get_db()

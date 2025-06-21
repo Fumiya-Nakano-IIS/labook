@@ -122,6 +122,7 @@ label {
 input[type="text"],
 input[type="number"],
 input[type="file"],
+input[type="date"],
 select {
     width: 60%;
     padding: 8px;
