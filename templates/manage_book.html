@@ -11,19 +11,25 @@
 
 <body>
     <h2><button id='backPage' onclick='window.location.href="/"' style="width: fit-content;"><i
-                class="fa-solid fa-left-long"></i></button> <i class="fas fa-book"></i>
-        {% if mode == "edit" %}Edit{% else %}Add{% endif %} / Borrow</h2>
+                class="fa-solid fa-left-long"></i></button>
+        {% if mode == "edit" %}<i class="fas fa-book"></i> Edit / Borrow{% else %}<i class="fas fa-book-medical"></i>
+        Add{% endif %}</h2>
     <!-- {% if error %} <div style="color:red;">Error: {{ error }}</div>{% endif %}-->
     <div style="text-align: center;">
-        <img id="cover_preview" src="/{{ book['cover_image_path'] if book and book['cover_image_path'] else '' }}"
-            alt="No Image" style="max-height: max-content;">
+        {% if mode == "edit" %}
+        <img id="cover_preview"
+            src="{{ '/'+book['cover_image_path'] if book and book['cover_image_path'] else url_for('static', filename='book-solid.svg') }}"
+            alt="No Image" style="max-height: min-content;">
+        {% else %}
+        <img id="cover_preview" src="{{ url_for('static', filename='book-medical-solid.svg') }}" alt="No Image"
+            style="max-height: min-content;">
+        {% endif %}
     </div>
     <form method="post" id="manageBookForm" data-mode="{{ mode }}">
         <table class="book-form-table">
             <tr>
                 <td>
-                    <label for="isbn">ISBN:<button type="button" id="btnFetchBookInfo" onclick="fetchBookInfo()"><i
-                                class="fas fa-globe" aria-hidden="true"></i></button></label>
+                    <label for="isbn">ISBN:</label>
                 </td>
                 <td>
                     <input type="number" name="isbn" id="isbn" value="{{ book['isbn'] if book else '' }}" {% if
@@ -33,7 +39,9 @@
             </tr>
             <tr>
                 <td><label for="title">Title:</label></td>
-                <td><input type="text" name="title" id="title" value="{{ book['title'] if book else '' }}" required>
+                <td><input type="text" name="title" id="title" value="{{ book['title'] if book else '' }}"
+                        required><button type="button" id="btnFetchBookInfo" onclick="fetchBookInfo()"><i
+                            class="fas fa-globe" aria-hidden="true"></i></button>
                 </td>
             </tr>
             <tr>
@@ -85,9 +93,50 @@
             </tr>
         </table>
     </form>
-    <button type="button" id="btnBorrowBook" onclick="borrowBook()"><i class="fas fa-book-reader"
-            aria-hidden="true"></i> Borrow Book</button>
-    <button type="button" id="btnReturnBook" onclick="returnBook()"><i class="fa-solid fa-arrow-right-to-bracket"></i>
+    <form id="formStatus">
+        <table class="book-form-table" {% if mode !='edit' %}style="display:none;" {% endif %}>
+            <tr>
+                <td>
+                    <label>Borrowed by: </label>
+                </td>
+                <td>
+                    <input type="text" id="itxBorrower" placeholder="Available"
+                        value="{{ book['status'] if book and book['status'] else '' }}" disabled>
+                </td>
+            </tr>
+            <tr style="display: none;">
+                <td>
+                    <label>loan_id: </label>
+                </td>
+                <td>
+                    <input type="text" id="itxLoanId" value="" disabled>
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    <label>From (UTC): </label>
+                </td>
+                <td>
+                    <input type="text" id="itxTime" value="" disabled>
+                </td>
+            </tr>
+            </tr>
+            <tr>
+            <tr>
+                <td>
+                    <label>Your name: </label>
+                </td>
+                <td>
+                    <input type="text" id="itxName" placeholder="ex. YAM, MARIKO, MIYA...">
+                </td>
+            </tr>
+        </table>
+    </form>
+    <button type="button" id="btnBorrowBook" onclick="borrowBook()" {% if mode !='edit' %}style="display:none;" {% endif
+        %}><i class="fas fa-book-reader" aria-hidden="true"></i> Borrow Book</button>
+    <button type="button" id="btnReturnBook" onclick="returnBook()" {% if mode !='edit' %}style="display:none;" {% endif
+        %}><i class="fa-solid fa-arrow-right-to-bracket"></i>
         Return Book</button>
 </body>
 

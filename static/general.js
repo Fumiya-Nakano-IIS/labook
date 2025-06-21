@@ -30,3 +30,13 @@ async function isBookExist(isbn) {
             throw new Error('Network error');
         });
 }
+
+function isUserExist(username) {
+    if (!username) return false;
+    return fetch(`/users/${username}`)
+        .then(resp => {
+            if (resp.status === 404) return false;
+            if (resp.ok) return true;
+            throw new Error('Network error');
+        });
+}

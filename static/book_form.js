@@ -1,3 +1,5 @@
+const nameKey = `pdlab_nickname`;
+
 async function transferToEditPage(isbn) {
     const form = document.getElementById('manageBookForm');
     const mode = form.getAttribute('data-mode');
@@ -10,11 +12,104 @@ async function transferToEditPage(isbn) {
     return false;
 }
 
+async function updateBook() {
+    const isbnInput = document.getElementById('isbn');
+    const manageBookForm = document.getElementById('manageBookForm');
+    const isbn = isbnInput.value;
+    if (!isbnValidate(isbn)) {
+        alert('Invalid ISBN.\nPlease check and try again.');
+        isbnInput.focus();
+        return;
+    }
+    if (await transferToEditPage(isbn)) return;
+
+    const formData = new FormData(manageBookForm);
+    const data = {};
+    formData.forEach((v, k) => data[k] = v);
+
+    if (data.shelf_code) {
+        try {
+            const resp = await fetch(`/shelves/by_code/${encodeURIComponent(data.shelf_code)}`);
+            if (resp.ok) {
+                const shelf = await resp.json();
+                data.shelf_id = shelf.shelf_id;
+            } else {
+                const createResp = await fetch('/shelves', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        shelf_code: data.shelf_code,
+                        location_description: ''
+                    })
+                });
+                if (createResp.ok) {
+                    const shelf = await createResp.json();
+                    data.shelf_id = shelf.shelf_id;
+                } else {
+                    alert('Failed to create shelf.');
+                    return;
+                }
+            }
+        } catch (e) {
+            alert('Failed to resolve shelf code.');
+            return;
+        }
+        delete data.shelf_code;
+    } else data.shelf_id = null;
+
+    let url, method;
+    const mode = manageBookForm.getAttribute('data-mode');
+    if (mode === 'edit') {
+        url = `/books/${isbn}`;
+        method = 'PUT';
+    } else {
+        url = '/books';
+        method = 'POST';
+    }
+
+    const resp = await fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+
+    if (resp.ok) {
+        return true
+    } else {
+        const err = await resp.json();
+        alert('Error: ' + (err.description || resp.statusText));
+        return false;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async function () {
     const isbnInput = document.getElementById('isbn');
     const manageBookForm = document.getElementById('manageBookForm');
     const shelfCodeInput = document.getElementById('shelf_code');
     const shelfIdInput = document.getElementById('shelf_id');
+    const itxName = document.getElementById('itxName');
+    const itxBorrower = document.getElementById('itxBorrower');
+    const itxTime = document.getElementById('itxTime');
+    const itxLoanId = document.getElementById('itxLoanId')
+    const btnReturnBook = document.getElementById('btnReturnBook');
+    if (!itxBorrower.value) {
+        btnReturnBook.style.display = 'none';
+    } else {
+        try {
+            const response = await fetch(`/loans/activeLoan/${isbnInput.value}`, {
+                method: 'POST'
+            });
+            if (response.ok) {
+                const loan = await response.json();
+                if (loan) {
+                    itxTime.value = loan.loan_date;
+                    itxLoanId.value = loan.loan_id;
+                }
+            }
+        } catch (e) {
+            console.error('Failed to fetch active loan:', e);
+        }
+    }
 
     if (shelfCodeInput && !shelfCodeInput.value && shelfIdInput && shelfIdInput.value && !isNaN(shelfIdInput.value)) {
         try {
@@ -31,73 +126,13 @@ document.addEventListener('DOMContentLoaded', async function () {
         fetchBookInfo();
     });
 
+    itxName.value = localStorage.getItem(nameKey);
+
     manageBookForm.addEventListener('submit', async function (e) {
         e.preventDefault();
-
-        const isbn = isbnInput.value;
-        if (!isbnValidate(isbn)) {
-            alert('Invalid ISBN.\nPlease check and try again.');
-            isbnInput.focus();
-            return;
-        }
-        if (await transferToEditPage(isbn)) return;
-
-        const formData = new FormData(manageBookForm);
-        const data = {};
-        formData.forEach((v, k) => data[k] = v);
-
-        if (data.shelf_code) {
-            try {
-                const resp = await fetch(`/shelves/by_code/${encodeURIComponent(data.shelf_code)}`);
-                if (resp.ok) {
-                    const shelf = await resp.json();
-                    data.shelf_id = shelf.shelf_id;
-                } else {
-                    const createResp = await fetch('/shelves', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            shelf_code: data.shelf_code,
-                            location_description: ''
-                        })
-                    });
-                    if (createResp.ok) {
-                        const shelf = await createResp.json();
-                        data.shelf_id = shelf.shelf_id;
-                    } else {
-                        alert('Failed to create shelf.');
-                        return;
-                    }
-                }
-            } catch (e) {
-                alert('Failed to resolve shelf code.');
-                return;
-            }
-            delete data.shelf_code;
-        } else data.shelf_id = null;
-
-        let url, method;
-        const mode = manageBookForm.getAttribute('data-mode');
-        if (mode === 'edit') {
-            url = `/books/${isbn}`;
-            method = 'PUT';
-        } else {
-            url = '/books';
-            method = 'POST';
-        }
-
-        const resp = await fetch(url, {
-            method: method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-
-        if (resp.ok) {
-            alert('Book saved successfully.');
-            window.location.href = '/';
-        } else {
-            const err = await resp.json();
-            alert('Error: ' + (err.description || resp.statusText));
+        if (await updateBook()) {
+            alert('Book information updated successfully.');
+            window.location.href = '/books/manage?isbn=' + isbnInput.value;
         }
     });
 
@@ -146,9 +181,8 @@ async function fetchBookInfo() {
             coverPathInput.value = book.cover_image_path;
 
         const coverImg = document.getElementById('cover_preview');
-        if (coverImg) {
-            coverImg.src = '/' + book.cover_image_path || '';
-        }
+        if (coverImg && book.cover_image_path) coverImg.src = '/' + book.cover_image_path;
+
     } catch (e) {
         console.error('fetch book info failed:', e);
     }
@@ -184,13 +218,106 @@ async function deleteBook() {
     }
 }
 
-async function borrowBook(params) {
-    alert('This feature is not implemented yet.');
+async function preLoanProcess() {
+    if (!await updateBook()) return false;
+
+    const itxName = document.getElementById('itxName');
+    const name = itxName.value.trim();
+    if (!name) {
+        alert('Please enter your name.');
+        itxName.focus();
+        return false;
+    }
+    localStorage.setItem(nameKey, name);
+    try {
+        const resp = await fetch(`/users/by_name/${encodeURIComponent(name)}`);
+        if (resp.ok) {
+            const user = await resp.json();
+            return user.user_id;
+        } else {
+            const createResp = await fetch('/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_name: name })
+            });
+            if (createResp.ok) {
+                const user = await createResp.json();
+                return user.user_id;
+            } else {
+                alert('Failed to create user.');
+                return false;
+            }
+        }
+    } catch (e) {
+        alert('Failed to check user existence.');
+        return false;
+    }
+}
+
+async function returnBookMethod(isbn, user_id) {
+    const itxLoanId = document.getElementById('itxLoanId')
+    loan_id = itxLoanId.value;
+    try {
+        if (loan_id) {
+            const responseUpdateLoan = await fetch(`/loans/${loan_id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ returner_id: user_id })
+            });
+            if (responseUpdateLoan.ok) {
+                return true;
+            } else {
+                const err = await responseUpdateLoan.json();
+                alert('Error: ' + (err.description || responseUpdateLoan.statusText));
+            }
+        } else {
+            alert('Failed to return book.');
+        }
+    } catch (e) {
+        console.error('Return book failed:', e);
+        alert('Failed to return book.');
+    }
     return false;
 }
-async function returnBook(params) {
-    alert('This feature is not implemented yet.');
-    return false;
 
+async function borrowBook() {
+    user_id = await preLoanProcess();
+    if (!user_id) return false;
+    const isbn = document.getElementById('isbn').value;
+
+    const btnReturnBook = document.getElementById('btnReturnBook');
+    if (btnReturnBook.style.display !== 'none') {
+        alert('Returning book before borrowing.');
+        if (!await returnBookMethod(isbn, user_id)) {
+            return false;
+        }
+    }
+    const respLoan = await fetch(`/loans`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isbn: isbn, borrower_id: user_id })
+    });
+    if (respLoan.ok) {
+        alert('Book borrowed successfully.');
+        window.location.href = '/';
+    } else {
+        const err = await respLoan.json();
+        alert('Error: ' + (err.description || respLoan.statusText));
+        return false;
+    }
+}
+
+async function returnBook() {
+
+    user_id = await preLoanProcess();
+    if (user_id === false) return false;
+    const isbn = document.getElementById('isbn').value;
+
+    if (await returnBookMethod(isbn, user_id)) {
+        alert('Book returned successfully.');
+        window.location.href = '/';
+    } else {
+        return false;
+    }
 }
 

@@ -102,14 +102,14 @@ async function updateBooksTable(sortKey = currentSortKey, sortOrder = currentSor
             }
             tr.innerHTML = `
                 <td class="clickable-cover" style="cursor:pointer;">
-                    <img src="${book.cover_image_path || ''}" alt="Cover Image" style="max-width: 60px; max-height: 100px;" />
+                    <img src="${book.cover_image_path || '/static/book-solid.svg'}" alt="Cover Image" style="max-width: 60px; max-height: 100px;" />
                 </td>
                 <td class="clickable-title" style="cursor:pointer;"><a class='book-title'>${book.title || ''}</a></td>
                 <td class="searchable-author" style="cursor:pointer">${book.author || ''}</td>
                 <td class="searchable-publisher" style="cursor:pointer">${book.publisher || ''}</td>
-                <td class="searchable-publication-date" style="cursor:pointer">${book.publication_date || ''}</td>
+                <td class="searchable-publication-date" >${book.publication_date || ''}</td>
                 <td class="searchable-shelf" style="cursor:pointer">${bookShelfCode || ''}</td>
-                ${book.status ? `<td class="searchable-borrower" style="cursor:pointer">${book.borrower_id}</td>` : `<td>Available</td>`}
+                ${book.status ? `<td class="searchable-borrower" >${book.status}</td>` : `<td>Available</td>`}
             `;
             tr.querySelector('.clickable-cover')?.addEventListener('click', function () {
                 if (book.isbn) {
