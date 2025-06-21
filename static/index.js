@@ -4,36 +4,54 @@ let filterStatus = false;
 
 document.addEventListener('DOMContentLoaded', function () {
 
-    document.querySelectorAll('#booksTable thead th').forEach((th, idx) => {
-        const keyMap = ['cover_image_path', 'title', 'author', 'publisher', 'publication_date', 'shelf_code', 'status'];
-        if (idx === 0 || idx === 5) return;
-        if (idx === 6) {
-            th.style.cursor = 'pointer';
-            th.addEventListener('click', function () {
+
+    const headers = Array.from(document.querySelectorAll('#booksTable thead th[data-key]'))
+        .map(th => ({
+            th,
+            key: th.dataset.key,
+            indicator: th.querySelector('.indicator')
+        }));
+
+    function renderIndicators() {
+        headers.forEach(({ key, indicator }) => {
+            indicator.innerHTML = '';
+            if (key === 'status') {
+                indicator.innerHTML = filterStatus
+                    ? '<i class="fas fa-check-square" aria-hidden="true"></i>'
+                    : '<i class="far fa-square" aria-hidden="true"></i>';
+            }
+            else if (currentSortKey === key) {
+                indicator.innerHTML = currentSortOrder === 'asc'
+                    ? '<i class="fas fa-arrow-up" aria-hidden="true"></i>'
+                    : '<i class="fas fa-arrow-down" aria-hidden="true"></i>';
+            } else {
+                indicator.innerHTML = '<i class="fas fa-sort" aria-hidden="true" style="font-size: 0.75em;"></i>';
+            }
+        });
+    }
+
+    headers.forEach(({ th, key }) => {
+        th.style.cursor = 'pointer';
+        th.addEventListener('click', () => {
+            if (key === 'status') {
                 filterStatus = !filterStatus;
-                th.textContent = th.textContent.slice(0, th.textContent.length - 2) + (filterStatus ? ' ■' : ' □');
-                updateBooksTable();
-            });
-        } else {
-            th.style.cursor = 'pointer';
-            th.addEventListener('click', function () {
-                const sortKey = keyMap[idx];
-                if (sortKey === 'status') return;
-                if (currentSortKey === sortKey) {
-                    currentSortOrder = (currentSortOrder === 'asc') ? 'desc' : 'asc';
+            } else {
+                if (currentSortKey === key) {
+                    currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+                    if (!currentSortOrder) currentSortKey = null;
                 } else {
-                    currentSortKey = sortKey;
+                    currentSortKey = key;
                     currentSortOrder = 'asc';
                 }
-                document.querySelectorAll('#booksTable thead th').forEach((th2, i2) => {
-                    th2.textContent = th2.textContent.replace(' ▼', ' ▽').replace(' ▲', ' △');
-                    if (i2 === idx) {
-                        th2.textContent = th2.textContent.replace(' ▽', '').replace(' △', '') + (currentSortOrder === 'asc' ? ' ▲' : ' ▼');
-                    }
-                });
-                updateBooksTable();
-            });
-        }
+            }
+
+            renderIndicators();
+            updateBooksTable();
+        });
+    });
+
+    document.getElementById('searchInput').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') updateBooksTable();
     });
 
     document.getElementById('searchBtn').addEventListener('click', function () {
@@ -41,13 +59,17 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     document.getElementById('resetBtn').addEventListener('click', function () {
         document.getElementById('searchInput').value = '';
+        currentSortKey = 'updatedtime';
+        currentSortOrder = 'desc';
+        filterStatus = false;
+        renderIndicators();
         updateBooksTable();
     });
-
-    document.getElementById('searchInput').addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') updateBooksTable();
+    document.getElementById('addBookBtn').addEventListener('click', function () {
+        window.location.href = '/books/manage';
     });
 
+    renderIndicators();
     updateBooksTable();
 });
 

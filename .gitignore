@@ -1,11 +1,15 @@
 venv/*
 __pycache__/*
-notes/*
-*.pyc
-keys.py
 covers/*
-*.db
+*.pyc
 
+*.db
+*.log
+
+keys.py
+
+notes/*
 ACTIVATE.sh
 DEBUG.sh
-*.log
+*.pem
+*.cnf

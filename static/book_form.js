@@ -12,13 +12,13 @@ async function transferToEditPage(isbn) {
 
 document.addEventListener('DOMContentLoaded', async function () {
     const isbnInput = document.getElementById('isbn');
-    const form = document.getElementById('manageBookForm');
+    const manageBookForm = document.getElementById('manageBookForm');
     const shelfCodeInput = document.getElementById('shelf_code');
+    const shelfIdInput = document.getElementById('shelf_id');
 
-    if (shelfCodeInput && shelfCodeInput.value && !isNaN(shelfCodeInput.value)) {
-
+    if (shelfCodeInput && !shelfCodeInput.value && shelfIdInput && shelfIdInput.value && !isNaN(shelfIdInput.value)) {
         try {
-            const resp = await fetch(`/shelves/${shelfCodeInput.value}`);
+            const resp = await fetch(`/shelves/${shelfIdInput.value}`);
             if (resp.ok) {
                 const shelf = await resp.json();
                 if (shelf.shelf_code) shelfCodeInput.value = shelf.shelf_code;
@@ -27,16 +27,11 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-    if (!isbnInput || !form) {
-        console.error('ISBN input or form not found');
-        return;
-    }
-
     isbnInput.addEventListener('change', async function () {
         fetchBookInfo();
     });
 
-    form.addEventListener('submit', async function (e) {
+    manageBookForm.addEventListener('submit', async function (e) {
         e.preventDefault();
 
         const isbn = isbnInput.value;
@@ -47,7 +42,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
         if (await transferToEditPage(isbn)) return;
 
-        const formData = new FormData(form);
+        const formData = new FormData(manageBookForm);
         const data = {};
         formData.forEach((v, k) => data[k] = v);
 
@@ -57,7 +52,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 if (resp.ok) {
                     const shelf = await resp.json();
                     data.shelf_id = shelf.shelf_id;
-                } else if (data.shelf_code) {
+                } else {
                     const createResp = await fetch('/shelves', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -78,11 +73,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                 alert('Failed to resolve shelf code.');
                 return;
             }
-        }
-        delete data.shelf_code;
+            delete data.shelf_code;
+        } else data.shelf_id = null;
 
         let url, method;
-        const mode = form.getAttribute('data-mode');
+        const mode = manageBookForm.getAttribute('data-mode');
         if (mode === 'edit') {
             url = `/books/${isbn}`;
             method = 'PUT';
@@ -96,6 +91,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
+
         if (resp.ok) {
             alert('Book saved successfully.');
             window.location.href = '/';
@@ -109,7 +105,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 });
 
 async function fetchBookInfo() {
-    const loadingSpinner = document.getElementById('loadingSpinner');
+    const btnFetch = document.getElementById('btnFetchBookInfo');
     const isbn = document.getElementById('isbn').value;
     if (!isbnValidate(isbn)) {
         alert('invalid ISBN');
@@ -118,9 +114,12 @@ async function fetchBookInfo() {
     }
     if (await transferToEditPage(isbn)) return;
     try {
-        if (loadingSpinner) loadingSpinner.style.display = '';
+
+        btnFetch.disabled = true;
+        btnFetch.innerHTML = '<i class="fas fa-spinner" ></i>';
         const response = await fetch(`/books/api/fetch_book_info/${isbn}`);
-        if (loadingSpinner) loadingSpinner.style.display = 'none';
+        btnFetch.disabled = false;
+        btnFetch.innerHTML = '<i class="fas fa-globe" aria-hidden="true"></i>';
         if (!response.ok) {
             console.error('not found online:', e);
             return;
@@ -154,3 +153,44 @@ async function fetchBookInfo() {
         console.error('fetch book info failed:', e);
     }
 }
+
+async function mobileScan() {
+    const shelfCode = document.getElementById('shelf_code').value;
+    window.location.href = `/L/${shelfCode}`;
+}
+
+async function deleteBook() {
+    const isbn = document.getElementById('isbn').value;
+    if (!isbnValidate(isbn)) {
+        alert('Invalid ISBN.\nPlease check and try again.');
+        return;
+    }
+    if (!confirm('Are you sure you want to delete this book?')) return;
+
+    try {
+        const response = await fetch(`/books/${isbn}`, {
+            method: 'DELETE'
+        });
+        if (response.ok) {
+            alert('Book deleted successfully.');
+            window.location.href = '/';
+        } else {
+            const err = await response.json();
+            alert('Error: ' + (err.description || response.statusText));
+        }
+    } catch (e) {
+        console.error('Delete book failed:', e);
+        alert('Failed to delete book. Please try again later.');
+    }
+}
+
+async function borrowBook(params) {
+    alert('This feature is not implemented yet.');
+    return false;
+}
+async function returnBook(params) {
+    alert('This feature is not implemented yet.');
+    return false;
+
+}
+

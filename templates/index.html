@@ -14,20 +14,35 @@
     </a>
     <br>
     <input type="text" id="searchInput" placeholder="ISBN / Title / Author / Publisher">
-    <button type="button" id="searchBtn">Search</button>
-    <button type="button" id="resetBtn">Reset</button>
-    <button type="button" id="continuousBtn">Continuous</button>
+    <button type="button" id="searchBtn"><i class="fas fa-search" aria-hidden="true"></i></button>
+    <button type="button" id="resetBtn"><i class="fas fa-undo" aria-hidden="true"></i></button>
+    <button type="button" id="addBookBtn"><i class="fas fa-book-medical" aria-hidden="true"></i> add book</button>
 
     <table id="booksTable" class="book-form-table">
         <thead>
             <tr>
                 <th>Cover</th>
-                <th>Title △</th>
-                <th>Author △</th>
-                <th>Publisher △</th>
-                <th>Published △</th>
+                <th data-key="title">
+                    Title
+                    <span class="indicator"></span>
+                </th>
+                <th data-key="author">
+                    Author
+                    <span class="indicator"></span>
+                </th>
+                <th data-key="publisher">
+                    Publisher
+                    <span class="indicator"></span>
+                </th>
+                <th data-key="publication_date">
+                    Published
+                    <span class="indicator"></span>
+                </th>
                 <th>Location</th>
-                <th>Status □</th>
+                <th data-key="status">
+                    Status
+                    <span class="indicator"></span>
+                </th>
             </tr>
         </thead>
         <tbody>

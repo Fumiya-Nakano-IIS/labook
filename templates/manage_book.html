@@ -2,32 +2,33 @@
 <html>
 
 <head>
-    <title>{% if mode == "edit" %}Edit{% else %}Add{% endif %} Book</title>
+    <title>laBook | {% if mode == "edit" %}Edit{% else %}Add{% endif %} / Borrow</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="{{ url_for('static', filename='general.js') }}"></script>
     <script src="{{ url_for('static', filename='book_form.js') }}"></script>
+    <script src="https://kit.fontawesome.com/6be837db5c.js" crossorigin="anonymous"></script>
 </head>
 
 <body>
-    {% if error %}
-    <div style="color:red;">Error: {{ error }}</div>
-    {% endif %}
-    <img id="cover_preview"
-        src="/{{ book['cover_image_path'] if book and book['cover_image_path'] else '' }}"
-        alt="No Image">
+    <h2><button id='backPage' onclick='window.location.href="/"' style="width: fit-content;"><i
+                class="fa-solid fa-left-long"></i></button> <i class="fas fa-book"></i>
+        {% if mode == "edit" %}Edit{% else %}Add{% endif %} / Borrow</h2>
+    <!-- {% if error %} <div style="color:red;">Error: {{ error }}</div>{% endif %}-->
+    <div style="text-align: center;">
+        <img id="cover_preview" src="/{{ book['cover_image_path'] if book and book['cover_image_path'] else '' }}"
+            alt="No Image" style="max-height: max-content;">
+    </div>
     <form method="post" id="manageBookForm" data-mode="{{ mode }}">
         <table class="book-form-table">
             <tr>
                 <td>
-                    <label for="isbn">ISBN:</label>
+                    <label for="isbn">ISBN:<button type="button" id="btnFetchBookInfo" onclick="fetchBookInfo()"><i
+                                class="fas fa-globe" aria-hidden="true"></i></button></label>
                 </td>
                 <td>
                     <input type="number" name="isbn" id="isbn" value="{{ book['isbn'] if book else '' }}" {% if
-                        mode=="edit" %}readonly{% endif %} required><button type="button" id="fetchBookInfoBtn" onclick="fetchBookInfo()">f</button><span id="loadingSpinner" style="display:none;"><svg width="20" height="20" viewBox="0 0 50 50">
-                                <circle cx="25" cy="25" r="20" fill="none" stroke="#888" stroke-width="5" stroke-linecap="round" stroke-dasharray="90 150" stroke-dashoffset="0">
-                                    <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite" />
-                                </circle> </svg></span>
-                    </span>
+                        mode=="edit" %}readonly{% endif %} required><button type="button" id="btnScanner"
+                        onclick="mobileScan()"><i class="fas fa-barcode" aria-hidden="true"></i></button>
                 </td>
             </tr>
             <tr>
@@ -45,16 +46,16 @@
                 </td>
             </tr>
             <tr>
-                <td><label for="publication_date">Publication Date:</label></td>
+                <td><label for="publication_date">Publication:</label></td>
                 <td><input type="date" name="publication_date" id="publication_date"
                         value="{{ book['publication_date'] if book else '' }}"></td>
             </tr>
-            <tr>
-                <td><label for="cover_image_path">Cover Image Path:</label></td>
+            <tr style="display: none;">
+                <td><label for="cover_image_path">Img Path:</label></td>
                 <td><input type="text" name="cover_image_path" id="cover_image_path"
                         value="{{ book['cover_image_path'] if book else '' }}"></td>
             </tr>
-            <tr>
+            <tr style="display: none;">
                 <td><label for="owner_id">Owner ID:</label></td>
                 <td><input type="number" name="owner_id" id="owner_id" value="{{ book['owner_id'] if book else '0' }}">
                 </td>
@@ -63,17 +64,31 @@
                 <td><label for="comment">Comment:</label></td>
                 <td><input type="text" name="comment" id="comment" value="{{ book['comment'] if book else '' }}"></td>
             </tr>
+            <tr style="display: none;">
+                <td><label for="shelf_id">Shelf ID:</label></td>
+                <td><input type="number" name="shelf_id" id="shelf_id" value="{{ book['shelf_id'] if book else '' }}">
+                </td>
+            </tr>
             <tr>
                 <td><label for="shelf_code">Shelf Code:</label></td>
                 <td><input type="text" name="shelf_code" id="shelf_code"
-                        value="{{ book['shelf_code'] if book else '' }}"></td>
+                        value="{{ location_code_override if  location_code_override else '' }}"></td>
             </tr>
             <tr>
-                <td></td>
-                <td><input type="submit" value="{% if mode == 'edit' %}Update{% else %}Add{% endif %} Book"></td>
+                <td>
+                    <button type="button" id="btnDeleteBook" onclick="deleteBook()" {% if mode !='edit'
+                        %}style="display:none;" {% endif %}><i class="fas fa-trash" aria-hidden="true"></i></button>
+                </td>
+                <td><button type="submit" id="btnSubmitForm"><i class="fas fa-save" aria-hidden="true"></i> {% if mode
+                        == 'edit' %}Update{% else %}Add{% endif %} Book</button>
+                </td>
             </tr>
         </table>
     </form>
+    <button type="button" id="btnBorrowBook" onclick="borrowBook()"><i class="fas fa-book-reader"
+            aria-hidden="true"></i> Borrow Book</button>
+    <button type="button" id="btnReturnBook" onclick="returnBook()"><i class="fa-solid fa-arrow-right-to-bracket"></i>
+        Return Book</button>
 </body>
 
 </html>
